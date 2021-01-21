@@ -19,6 +19,8 @@ This repository includes implementations of QAOA-specific compilation policies d
 ```
 python main.py -arg arg_val
 ```
-* -device_json string (required): Target device configuration file location. It holds the information on basis gates, reliability, and allowed two-qubit operations. The file has to be written in json format. An example can be found [here]().
+* -device_json string (required): Target device configuration file location. This file holds the information on basis gates, reliability, and allowed two-qubit operations. It has to be written in json format. An example can be found [here]().
 
-* -circuit_json string (required): Problem QAOA-circuit file location. It holds the required ZZ interactions between various qubit-pairs to encode the cost hamiltonian. The file has to be written in json format. An example can be found [here]().
+* -circuit_json string (required): Problem QAOA-circuit file location. This file holds the required ZZ interactions between various qubit-pairs to encode the cost hamiltonian. It has to be written in json format. An example can be found [here]().
+
+* -config_json string (required): Compiler configuration file location. This file holds target p-level, and chosen packing limit, qiskit transpiler seed, optimization level, and routing method. It has to be written in json format. An example can be found [here]().
