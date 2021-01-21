@@ -33,6 +33,6 @@ python main.py -arg arg_val
 
 ```
 python main.py -device_json Examples/QC.json -circuit_json Examples/QAOA_circ.json -config_json Examples/Config.json  -policy_compilation VIC
-or
+######### supports abbreviation ##############
 python main.py -d Examples/QC.json -ci Examples/QAOA_circ.json -con Examples/Config.json  -p VIC
 ```
