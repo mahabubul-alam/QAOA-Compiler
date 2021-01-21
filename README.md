@@ -1,1 +1,1 @@
-# QAOA Specific Compilation Policies built upon Qiskit
+# QAOA-specific compilation policies built-upon Qiskit
