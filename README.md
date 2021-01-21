@@ -17,5 +17,5 @@ This repository includes implementations of QAOA-specific compilation policies d
 
 ## How to Run
 ```
-python main.py [-switch] [switch_val]
+python main.py [-arg] [arg_val]
 ```
