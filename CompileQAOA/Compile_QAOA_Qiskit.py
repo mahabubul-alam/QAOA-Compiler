@@ -234,7 +234,7 @@ class Compile_QAOA_Qiskit:
         for i in range(logical_n):
             IncrC_qc.measure(self.Initial_Layout[i],i)
 
-        IncrC_qc.qasm(self.Output_File_Name)
+        IncrC_qc.qasm(filename=self.Output_File_Name)
         return IncrC_qc
 
 
@@ -323,7 +323,7 @@ class Compile_QAOA_Qiskit:
                         opt_ckt = trial_ckt
 
             if not interchange:
-                opt_ckt.qasm(self.Output_File_Name)
+                opt_ckt.qasm(filename=self.Output_File_Name)
                 return opt_ckt
             else:
                 layer_1 = interchange[0]
@@ -403,7 +403,7 @@ class Compile_QAOA_Qiskit:
         self.Instruction_Parallelization()
         LO = self.Layer_ZZ_Assignments.keys()
         ckt = self.Construct_Circuit_IterC(LO)
-        ckt.qasm(self.Output_File_Name)
+        ckt.qasm(filename=self.Output_File_Name)
         return ckt
 
 
