@@ -1,1 +1,1 @@
-# QAOA Compiler
+# QAOA Compiler (backend: Qiskit)
