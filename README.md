@@ -14,3 +14,8 @@ This repository includes implementations of QAOA-specific compilation policies d
 ## Structure
 * [CompileQAOA](): Python Class implementation of the compilation policies.
 * [Examples](): Sample input files to the compiler.
+
+## How to Run
+```
+python main.py [-switch] [switch_val]
+```
