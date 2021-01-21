@@ -17,6 +17,6 @@ This repository includes implementations of QAOA-specific compilation policies d
 
 ## How to Run
 ```
-python main.py {-arg} {arg_val}
+python main.py -arg1 arg1_val -arg2 arg2_val
 ```
 * -device_json string : Target device configuration file in json format (basis gates, reliability, allowed two-qubit operations, etc.). An example can be found under [Examples]()
