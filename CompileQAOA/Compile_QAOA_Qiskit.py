@@ -419,18 +419,3 @@ class Compile_QAOA_Qiskit:
         self.set_IncrC_VarAwareness(Variation_Aware)
         ckt = self.Incremental_Compilation()
         return ckt
-
-
-
-
-
-
-
-
-#obj = Compile_QAOA_Qiskit('small.json','QC.json','Config.json')
-#ckt1 = obj.run_IP()
-#ckt2 = obj.run_IterC()
-#ckt3 = obj.run_IncrC()
-
-
-
