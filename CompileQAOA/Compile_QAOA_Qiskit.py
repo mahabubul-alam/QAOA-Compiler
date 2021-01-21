@@ -9,13 +9,13 @@
 ##############               mxa890@psu.edu               ######################
 ################################################################################
 
-import json
+import commentjson as json
 import networkx as nx
 from qiskit.circuit import Parameter
 from qiskit import *
 import math
 import re
-
+import time
 
 class Compile_QAOA_Qiskit:
     def __init__(self, Circuit_json=None, QC_json=None, Config_json=None, Out_Circuit_File_Name='QAOA.qasm'):
@@ -24,8 +24,12 @@ class Compile_QAOA_Qiskit:
         self.Output_File_Name = Out_Circuit_File_Name
         self.Extract_QC_Data(QC_json)
         self.Layer_ZZ_Assignments = {}
-        self.ZZ_graph = self.QAOA_ZZ_graph(Circuit_json)
+        self.QAOA_ZZ_graph(Circuit_json)
         self.Initial_Layout = list(range(len(self.ZZ_graph.nodes())))
+        self.circuit = None
+        self.sorted_ops = None
+        self.cost = 10e10
+        self.final_mapping = []
 
     def Load_Config(self,Config_json=None):
         """ """
@@ -86,12 +90,9 @@ class Compile_QAOA_Qiskit:
         self.QQ_Distances = nx.floyd_warshall(self.Unweighted_Undirected_Coupling_Graph)
         self.Noise_Aware_QQ_Distances = nx.floyd_warshall(self.Weighted_Undirected_Coupling_Graph)
 
-
     
-    @staticmethod
-    def QAOA_ZZ_graph(circ_json=None):
+    def QAOA_ZZ_graph(self,circ_json=None):
         """ """
-        #print(circ_json)
         with open(circ_json) as f:
             data = json.loads(f.read())
 
@@ -99,9 +100,9 @@ class Compile_QAOA_Qiskit:
         for key, val in data.items():
             nodes = eval(val)
             ZZ_graph.add_edge(nodes[0],nodes[1])
-        return ZZ_graph
+        self.ZZ_graph = ZZ_graph
     
-    def find_final_mapping_IC(self,qiskit_ckt_object):
+    def Final_Mapping_IC(self,qiskit_ckt_object):
         
         qiskit_ckt_object.qasm(filename='tempfile')
         os.system('grep measure tempfile | awk \'{print $2, $4}\' > temp')
@@ -126,17 +127,17 @@ class Compile_QAOA_Qiskit:
 
         final_map = []
         
-        for i in range(len(self.ZZ_graph.nodes())):
+        for i in range(qiskit_ckt_object.width()-qiskit_ckt_object.num_qubits):
             final_map.append(FMAP[str(i)])
         
         os.system('rm temp')
         os.system('rm tempfile')
         
-        return final_map
+        self.final_map = final_map
 
 
     
-    def _set_Initial_Layout(self,target_layout=None):
+    def set_Initial_Layout(self,target_layout=None):
         """ """
         if target_layout:
             self.Initial_Layout = target_layout
@@ -172,12 +173,11 @@ class Compile_QAOA_Qiskit:
             if i == len(Sorted_ops):
                 Sorted_ops.append(op)
 
-        return Sorted_ops
+        self.sorted_ops = Sorted_ops
 
     def construct_single_layer_ckt_IC(self,p):
         """ """
 
-        #print('Single_Layer_Constr: {}'.format(self.Initial_Layout))
         n = len(self.ZZ_graph.nodes())
         qc = QuantumCircuit(n, n)
 
@@ -196,7 +196,8 @@ class Compile_QAOA_Qiskit:
                 basis_gates = self.Basis_Gates, initial_layout = self.Initial_Layout, \
                 optimization_level = self.Opt_Level, seed_transpiler = self.Trans_Seed, routing_method = self.Route_Method)
 
-        return trans_ckt
+        self.circuit =  trans_ckt
+
 
     def Incremental_Compilation(self):
         """ """
@@ -213,14 +214,18 @@ class Compile_QAOA_Qiskit:
 
             while Remaining_ops:
 
-                Sorted_ops = self.sort_zz_by_QQ_distances(Remaining_ops)
+                self.sort_zz_by_QQ_distances(Unsorted_ops=Remaining_ops)
+                Sorted_ops = self.sorted_ops
                 self.Instruction_Parallelization(Sorted_ops,Single_Layer=True)
             
                 Remaining_ops = self.Layer_ZZ_Assignments['R']
 
-                new_ckt_segment = self.construct_single_layer_ckt_IC(p)
-                final_map = self.find_final_mapping_IC(new_ckt_segment)
-                self._set_Initial_Layout(final_map)
+                self.construct_single_layer_ckt_IC(p)
+                new_ckt_segment = self.circuit
+
+                self.Final_Mapping_IC(qiskit_ckt_object=new_ckt_segment)
+                final_map = self.final_map
+                self.set_Initial_Layout(final_map)
 
                 new_ckt_segment.remove_final_measurements(inplace=True)
                 IncrC_qc = IncrC_qc + new_ckt_segment
@@ -234,8 +239,8 @@ class Compile_QAOA_Qiskit:
         for i in range(logical_n):
             IncrC_qc.measure(self.Initial_Layout[i],i)
 
-        IncrC_qc.qasm(filename=self.Output_File_Name)
-        return IncrC_qc
+        #IncrC_qc.qasm(filename=self.Output_File_Name)
+        self.circuit = IncrC_qc
 
 
     
@@ -307,24 +312,29 @@ class Compile_QAOA_Qiskit:
             LOO.append(L)
 
         opt_target = 10e10
-        opt_ckt = None
+        opt_ckt = QuantumCircuit()
 
         while True:
             for layer_1 in range(len(LOO)):
                 for layer_2 in range(layer_1+1,len(LOO)):
                     Temp = LOO.copy()
                     Temp[layer_1], Temp[layer_2] = Temp[layer_2], Temp[layer_1]
-                    trial_ckt = self.Construct_Circuit_IterC(Temp)
-                    trial_target = self.Calc_Cost(trial_ckt)
+
+                    self.Construct_Circuit_IterC(LO=Temp)
+                    trial_ckt = self.circuit
+                        
+                    self.Calc_Cost(circ=trial_ckt,Target=self.IterC_Target)
+                    trial_target = self.cost
 
                     if trial_target < opt_target:
                         interchange = [layer_1, layer_2]
                         opt_target = trial_target
-                        opt_ckt = trial_ckt
+                        opt_ckt = self.circuit
+
 
             if not interchange:
-                opt_ckt.qasm(filename=self.Output_File_Name)
-                return opt_ckt
+                self.circuit = opt_ckt
+                break
             else:
                 layer_1 = interchange[0]
                 layer_2 = interchange[1]
@@ -332,20 +342,23 @@ class Compile_QAOA_Qiskit:
                 #print('Interchanged: %s, %s, Cost: %s\n' % (layer_1, layer_2, opt_target))
                 interchange = []
     
-    
-    def Calc_Cost(self,circ=None):
-        if self.IterC_Target == 'GC_2Q':
-            return circ.count_ops()[self.Native_2Q[0]]
-        elif self.IterC_Target == 'D':
-            return circ.depth()
-        elif self.IterC_Target == 'ESP':
-            return self.Estimate_SP(circ)
+    def Calc_Cost(self,circ=None,Target='GC_2Q'):
+        if Target == 'GC_2Q':
+            self.cost = circ.count_ops()[self.Native_2Q[0]]
+        elif Target == 'D':
+            self.cost = circ.depth()
+        elif Target == 'ESP':
+            self.circuit = circ
+            self.Estimate_SP()
 
-    def Estimate_SP(self, circ=None):
+
+    def Estimate_SP(self):
+        """ """
+        cir = self.circuit.copy()
         ESP = 1
         while True:
-            if circ._data:
-                k = circ._data.pop()
+            if cir._data:
+                k = cir._data.pop()
                 GATE = k[0].__dict__['name']
                 if GATE not in self.Basis_Gates:
                     continue
@@ -355,10 +368,15 @@ class Compile_QAOA_Qiskit:
                 if len(QUB) == 1:
                     ESP = ESP*float(self.QC_DATA[GATE][str(QUB[0])])
                 else:
-                    ESP = ESP*float(self.QC_DATA[GATE]['({},{})'.format(QUB[0],QUB[1])])
+                    if '({},{})'.format(QUB[0],QUB[1]) in self.QC_DATA[GATE].keys():
+                        ESP = ESP*float(self.QC_DATA[GATE]['({},{})'.format(QUB[0],QUB[1])])
+                    elif '({},{})'.format(QUB[1],QUB[0]) in self.QC_DATA[GATE].keys():
+                        ESP = ESP*float(self.QC_DATA[GATE]['({},{})'.format(QUB[1],QUB[0])])
+                    else:
+                        print('Please check the device configuration file for the following qubit-pair data: {}, {}'.format(QUB[0],QUB[1]))
             else:
                 break
-        return -math.log(ESP)
+        self.cost = -math.log(ESP)
 
 
     def Construct_Circuit_IterC(self,LO=None):
@@ -396,26 +414,59 @@ class Compile_QAOA_Qiskit:
                 basis_gates = self.Basis_Gates, initial_layout = self.Initial_Layout, \
                 optimization_level = self.Opt_Level, seed_transpiler = self.Trans_Seed, routing_method = self.Route_Method)
 
-        return trans_ckt
+        self.circuit = trans_ckt
+
+    
+    def QASM_Note(self,ckt=None):
+        """ """
+        print('##################### Notes on the Output File #############################')
+        if ckt:
+            self.circuit = ckt
+            self.Estimate_SP()
+            print('Depth: {}, Gate-count(2Q): {}, ESP: {}'.format(ckt.depth(), ckt.count_ops()[self.Native_2Q[0]], math.exp(-self.cost)))
+            print('The circuit is written with beta/gamma parameters at different P-lavels (https://arxiv.org/pdf/1411.4028.pdf)')
+            print('bX --> beta parameter at p=X')
+            print('gX_Y_Z --> gamma parameter at p=X between *logical* qubit Y and Z. For the MaxCut problem of unweighted graphs, gX_Y1_Z1 = gX_Y2_Z2 (https://arxiv.org/pdf/1411.4028.pdf)')
+        else: print('Compilation Error! Please check the input files.')
+        print('############################################################################')
+
 
     def run_IP(self):
         """ """
         self.Instruction_Parallelization()
         LO = self.Layer_ZZ_Assignments.keys()
-        ckt = self.Construct_Circuit_IterC(LO)
+        self.Construct_Circuit_IterC(LO)
+        ckt = self.circuit
         ckt.qasm(filename=self.Output_File_Name)
-        return ckt
+        print('############################################################################')
+        print('Instruction Parallelization-only Compilation (IP) completed! \nQASM File Written: {}'.format(self.Output_File_Name))
+        self.QASM_Note(ckt)
 
 
     def run_IterC(self,Target='D'):
         """ """
         self.set_IterC_Target(Target)
         self.Instruction_Parallelization()
-        ckt = self.Iterative_Compilation()
-        return ckt
+        self.Iterative_Compilation()
+        ckt = self.circuit
+        ckt.qasm(filename=self.Output_File_Name)
+        print('############################################################################')
+        print('Iterative Compilation (IterC) completed! \nQASM File Written: {}'.format(self.Output_File_Name))
+        self.QASM_Note(ckt=ckt)
+
 
     def run_IncrC(self,Variation_Aware=False):
         """ """
         self.set_IncrC_VarAwareness(Variation_Aware)
-        ckt = self.Incremental_Compilation()
-        return ckt
+        self.Incremental_Compilation()
+        ckt = self.circuit
+        ckt.qasm(filename=self.Output_File_Name)
+        print('############################################################################')
+        if Variation_Aware: print('Variation-aware Incremental Compilation (VIC) completed!\nQASM File Written: {}'.format(self.Output_File_Name))
+        else: print('Incremental Compilation (IC) completed!\nQASM File Written: {}'.format(self.Output_File_Name))
+        self.QASM_Note(ckt)
+
+#Comp_obj = Compile_QAOA_Qiskit(Circuit_json='Examples/QAOA_circ.json', QC_json='Examples/QC.json', Config_json='Examples/Config.json')
+#Comp_obj.Instruction_Parallelization()
+#Comp_obj.Construct_Circuit_IterC(LO=['L10', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'L8', 'L9', 'L0'])
+
