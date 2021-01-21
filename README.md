@@ -19,3 +19,4 @@ This repository includes implementations of QAOA-specific compilation policies d
 ```
 python main.py [-arg] [arg_val]
 ```
+* [-device_json string] : Target device configuration file (basis gates, reliability, allowed two-qubit operations, etc.)
