@@ -1,5 +1,5 @@
-{
-	"1" : "(6, 12)",
+{ //Required ZZ interations between qubit pairs to encode the cost Hamiltonian of a QAOA problem instance (e.g. MaxCut) into a parametric circuit. Format- "Serial" : "(q1,q2)"
+	"1" : "(6, 12)", // A ZZ interaction between qubit 6 and 12
 	"2" : "(6, 15)",
 	"3" : "(6, 1)",
 	"4" : "(6, 11)",
@@ -62,5 +62,5 @@
 	"61" : "(0, 8)",
 	"62" : "(8, 2)",
 	"63" : "(8, 11)",
-	"64" : "(2, 11)"
+	"64" : "(2, 11)" //A total of 64 ZZ interactions required for this toy problem (MaxCut of a 8-Regular graph with 16 nodes)
 }
