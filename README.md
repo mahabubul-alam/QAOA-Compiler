@@ -9,3 +9,8 @@ This repository includes implementations of QAOA-specific compilation policies d
 * **python>=3.8.5**
 * **qiskit>=0.23.1**
 * **networkx>=2.5**
+
+
+## Structure
+* [CompileQAOA](): Class for compilation policies.
+* [Examples](): Sample input files to the compiler.
