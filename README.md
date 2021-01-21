@@ -38,3 +38,32 @@ python main.py -device_json Examples/QC.json -circuit_json Examples/QAOA_circ.js
 ```
 python main.py -d Examples/QC.json -ci Examples/QAOA_circ.json -co Examples/Config.json  -p VIC
 ```
+
+## Citation
+```
+@inproceedings{alam2020circuit,
+  title={Circuit Compilation Methodologies for Quantum Approximate Optimization Algorithm},
+  author={Alam, Mahabubul and Ash-Saki, Abdullah and Ghosh, Swaroop},
+  booktitle={2020 53rd Annual IEEE/ACM International Symposium on Microarchitecture (MICRO)},
+  pages={215--228},
+  year={2020},
+  organization={IEEE}
+}
+
+@inproceedings{alam2020efficient,
+  title={An efficient circuit compilation flow for quantum approximate optimization algorithm},
+  author={Alam, Mahabubul and Ash-Saki, Abdullah and Ghosh, Swaroop},
+  booktitle={2020 57th ACM/IEEE Design Automation Conference (DAC)},
+  pages={1--6},
+  year={2020},
+  organization={IEEE}
+}
+
+@inproceedings{alam2020noise,
+  title={Noise resilient compilation policies for quantum approximate optimization algorithm},
+  author={Alam, Mahabubul and Ash-Saki, Abdullah and Li, Junde and Chattopadhyay, Anupam and Ghosh, Swaroop},
+  booktitle={Proceedings of the 39th International Conference on Computer-Aided Design},
+  pages={1--7},
+  year={2020}
+}
+```
