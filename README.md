@@ -9,6 +9,7 @@ This repository includes implementations of QAOA-specific compilation policies d
 * **python>=3.8.5**
 * **qiskit>=0.23.1**
 * **networkx>=2.5**
+* **commentjson>=0.9.0**
 
 
 ## Structure
