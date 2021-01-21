@@ -6,3 +6,6 @@ This repository includes implementations of QAOA-specific compilation policies d
 * [Noise resilient compilation policies for quantum approximate optimization algorithm [ICCAD2020]](https://dl.acm.org/doi/pdf/10.1145/3400302.3415745?casa_token=D_dOwFq1iIsAAAAA:8mS78EK6GYdV7ELjeh01mi-3lSZRgI9yWeWtYq2o5VBHiCooCPFGZDI5PVbcE12ezLOGNOBDno4)
 
 ## Dependencies
+* **python>=3.8.5**
+* **qiskit>=0.23.1**
+* **networkx>=2.5**
