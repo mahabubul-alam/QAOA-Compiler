@@ -29,7 +29,7 @@ python main.py -arg arg_val
 
 * -target_IterC string: Minimization objective of Iterative Compilation. The current version supports the following minimization objectives: Circuit Depth ('D'), Native two-qubit gate-count ('GC_2Q'), Estimated Success Probability ('ESP'). The default value is 'GC_2Q'.
 
-* -output_qasm_file_name string: File name to write the compiled QAOA circuit. The output is written in qasm format. The default value is 'QAOA.qasm'.
+* -output_qasm_file_name string: File name to write the compiled parametric QAOA circuit. The output is written in qasm format. The default value is 'QAOA.qasm'.
 
 ### Run the Example
 ```
