@@ -12,5 +12,5 @@ This repository includes implementations of QAOA-specific compilation policies d
 
 
 ## Structure
-* [CompileQAOA](): Python Class to apply the compilation policies.
+* [CompileQAOA](): Python Class (implementation of the compilation policies).
 * [Examples](): Sample input files to the compiler.
