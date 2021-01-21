@@ -466,7 +466,4 @@ class Compile_QAOA_Qiskit:
         else: print('Incremental Compilation (IC) completed!\nQASM File Written: {}'.format(self.Output_File_Name))
         self.QASM_Note(ckt)
 
-#Comp_obj = Compile_QAOA_Qiskit(Circuit_json='Examples/QAOA_circ.json', QC_json='Examples/QC.json', Config_json='Examples/Config.json')
-#Comp_obj.Instruction_Parallelization()
-#Comp_obj.Construct_Circuit_IterC(LO=['L10', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'L8', 'L9', 'L0'])
 
