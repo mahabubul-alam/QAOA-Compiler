@@ -32,7 +32,7 @@ python main.py -arg arg_val
 
 * -output_qasm_file_name string: File name to write the compiled parametric QAOA circuit. The output is written in qasm format. The default value is 'QAOA.qasm'.
 
-### Run the Example
+### Running the Example
 ```
 python main.py -device_json Examples/QC.json -circuit_json Examples/QAOA_circ.json -config_json Examples/Config.json  -policy_compilation VIC
 ```
