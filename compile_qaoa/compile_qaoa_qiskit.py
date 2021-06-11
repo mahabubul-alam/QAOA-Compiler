@@ -482,7 +482,7 @@ class CompileQAOAQiskit:
             return True
         return False
 
-    def qasm_note(self, ckt = None, pol = None):
+    def _qasm_note(self, ckt = None, pol = None):
         """
         This method prints notes on the compilation.
         """
@@ -524,7 +524,7 @@ class CompileQAOAQiskit:
         print('############################################################################')
         print('Instruction Parallelization-only Compilation (IP) completed!' +
         '\nQASM File Written: {}'.format('IP_'+self.output_file_name))
-        self.qasm_note(ckt, 'IP')
+        self._qasm_note(ckt, 'IP')
 
     def run_iter_c(self, target = 'D'):
         """
@@ -539,7 +539,7 @@ class CompileQAOAQiskit:
         print('############################################################################')
         print('Iterative Compilation (IterC) completed!'+
         '\nQASM File Written: {}'.format('IterC_'+self.output_file_name))
-        self.qasm_note(ckt, 'IterC_'+target)
+        self._qasm_note(ckt, 'IterC_'+target)
 
     def run_incr_c(self, variation_aware = False):
         """
@@ -557,8 +557,8 @@ class CompileQAOAQiskit:
         if variation_aware:
             print('Variation-aware Incremental Compilation (VIC) completed!' +
             '\nQASM File Written: {}'.format('VIC_'+self.output_file_name))
-            self.qasm_note(ckt, 'VIC')
+            self._qasm_note(ckt, 'VIC')
         else:
             print('Incremental Compilation (IC) completed!' +
             '\nQASM File Written: {}'.format('IC_'+self.output_file_name))
-            self.qasm_note(ckt, 'IC')
+            self._qasm_note(ckt, 'IC')
