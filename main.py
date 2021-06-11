@@ -33,9 +33,9 @@ if __name__ == '__main__':
         comp_obj = cqq.CompileQAOAQiskit(circuit_json=args.CKT, \
             qc_json=args.QCD, config_json=args.CON, out_circuit_file_name=args.OUT)
         if args.POL == 'IP': comp_obj.run_ip()
-        elif args.POL == 'IterC': comp_obj.run_iter_c(Target=args.TAR)
+        elif args.POL == 'IterC': comp_obj.run_iter_c(target=args.TAR)
         elif args.POL == 'IC': comp_obj.run_incr_c()
-        elif args.POL == 'VIC': comp_obj.run_incr_c(VariationAware=True)
+        elif args.POL == 'VIC': comp_obj.run_incr_c(variation_aware=True)
     else:
         print('Please provide valid paths to the input files.')
         

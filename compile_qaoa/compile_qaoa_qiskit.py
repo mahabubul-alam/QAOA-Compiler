@@ -1,3 +1,4 @@
+"""
 ################################################################################
 ##############      This library has been created by      ######################
 ##############            Md Mahabubul Alam               ######################
@@ -8,33 +9,34 @@
 ##############         University Park, PA, USA           ######################
 ##############               mxa890@psu.edu               ######################
 ################################################################################
+"""
 import math
 import re
 import os
+from qiskit.circuit import Parameter
 from qiskit import QuantumCircuit, transpile, Aer, execute
 import commentjson as json
 import networkx as nx
-from qiskit.circuit import Parameter
 
 class CompileQAOAQiskit:
-    def __init__(self, circuit_json=None,
-    qc_json=None, config_json=None, out_circuit_file_name='QAOA.qasm'):
+    def __init__(self, circuit_json = None,
+    qc_json = None, config_json = None, out_circuit_file_name = 'QAOA.qasm'):
         """
         This method initializes necessary config variables.
         """
-        self.load_config(config_json)
+        self._load_config(config_json)
         self.output_file_name = out_circuit_file_name
-        self.extract_qc_data(qc_json)
+        self._extract_qc_data(qc_json)
         self.layer_zz_assignments = {}
-        self.zz_graph = self.qaoa_zz_graph(circuit_json)
+        self.zz_graph = self._qaoa_zz_graph(circuit_json)
         self.initial_layout = list(range(len(self.zz_graph.nodes())))
         self.circuit = None
         self.sorted_ops = None
         self.cost = 10e10
         self.final_map = []
-        [self.uncompiled_ckt, self.naive_ckt] = self.naive_compilation()
-    
-    def naive_compilation(self):
+        [self.uncompiled_ckt, self.naive_ckt] = self._naive_compilation()
+
+    def _naive_compilation(self):
         """
         This method constructs performs a naive compilation with the qiskit backend.
         (gates are randomly ordered).
@@ -47,7 +49,7 @@ class CompileQAOAQiskit:
             for zz in self.zz_graph.edges():
                 n1 = zz[0]
                 n2 = zz[1]
-                gamma = Parameter('g{}_{}_{}'.format(p,n1,n2))
+                gamma = Parameter('g{}_{}_{}'.format(p, n1, n2))
                 qc.cx(n1, n2)
                 qc.rz(gamma, n2)
                 qc.cx(n1, n2)
@@ -56,14 +58,16 @@ class CompileQAOAQiskit:
                 qc.rx(beta,node)
             qc.barrier()
         qc.measure(range(n), range(n))
+
         trans_ckt = transpile(qc, coupling_map = self.coupling_map,
                 basis_gates = self.basis_gates, initial_layout = self.initial_layout,
                 optimization_level = self.Opt_Level, seed_transpiler = self.Trans_Seed, routing_method = self.Route_Method)
+
         qc.qasm(filename='uncompiled_'+self.output_file_name)
-        trans_ckt.qasm(filename='naive_compiled_'+self.output_file_name)
+        trans_ckt.qasm(filename='naive_compiled_' + self.output_file_name)
         return [qc, trans_ckt]
 
-    def load_config(self, config_json=None):
+    def _load_config(self, config_json = None):
         """
         This method loads the variables in the config json file.
         """
@@ -91,7 +95,7 @@ class CompileQAOAQiskit:
         else:
             self.Opt_Level = 1
 
-    def extract_qc_data(self, qc_file=None):
+    def _extract_qc_data(self, qc_file = None):
         """
         This method extracts hardware information from the QC json file.
         """
@@ -111,13 +115,13 @@ class CompileQAOAQiskit:
         self.coupling_map = []
         for key in self.qc_data[str(self.native_2q[0])].keys():
             n1, n2 = eval(key)[0], eval(key)[1]
-            if [n1,n2] not in self.coupling_map:
-                self.coupling_map.append([n1,n2])
-            if [n2,n1] not in self.coupling_map:
-                self.coupling_map.append([n2,n1])
-        self.calc_qq_distances()
+            if [n1, n2] not in self.coupling_map:
+                self.coupling_map.append([n1, n2])
+            if [n2, n1] not in self.coupling_map:
+                self.coupling_map.append([n2, n1])
+        self._calc_qq_distances()
 
-    def calc_qq_distances(self):
+    def _calc_qq_distances(self):
         """
         This method calculates pairwise qubit-qubit distances using the floyd_warshall algorithm.
         """
@@ -125,24 +129,25 @@ class CompileQAOAQiskit:
         self.weighted_undirected_coupling_graph = nx.Graph()
         for key, value in self.qc_data[str(self.native_2q[0])].items():
             n1, n2, sp = eval(key)[0], eval(key)[1], float(value)
-            self.unweighted_undirected_coupling_graph.add_edge(n1,n2)
-            self.weighted_undirected_coupling_graph.add_edge(n1,n2,weight=1/sp)
+            self.unweighted_undirected_coupling_graph.add_edge(n1, n2)
+            self.weighted_undirected_coupling_graph.add_edge(n1, n2, weight=1/sp)
         self.qq_distances = nx.floyd_warshall(self.unweighted_undirected_coupling_graph)
         self.noise_aware_qq_distances = nx.floyd_warshall(self.weighted_undirected_coupling_graph)
 
-    def set_iterc_target(self, Target='GC_2Q'):
+    def _set_iter_c_target(self, target = 'GC_2Q'):
         """
         This method can be used to set the target of iterative compilation.
         """
-        self.IterC_Target = Target
+        self.iter_c_target = target
 
-    def set_incrc_var_awareness(self, VariationAware=False):
+    def _set_incrc_var_awareness(self, variation_aware = False):
         """
         This method can be used to set variation awareness in incremental compilation.
         """
-        self.IncrC_VarAwareness = VariationAware
+        self.incr_c_var_awareness = variation_aware
 
-    def qaoa_zz_graph(self, circ_json=None):
+    @staticmethod
+    def _qaoa_zz_graph(circ_json = None):
         """
         This method is used to create the MaxCut graph from the json file.
         """
@@ -151,10 +156,10 @@ class CompileQAOAQiskit:
         zz_graph = nx.Graph()
         for key, val in data.items():
             nodes = eval(val)
-            zz_graph.add_edge(nodes[0],nodes[1])
+            zz_graph.add_edge(nodes[0], nodes[1])
         return zz_graph
 
-    def final_mapping_ic(self, qiskit_ckt_object):
+    def _final_mapping_ic(self, qiskit_ckt_object):
         """
         This method finds the output logical-to-physical qubit mapping in a compiled circuit block.
         """
@@ -162,7 +167,7 @@ class CompileQAOAQiskit:
         os.system('grep measure tempfile | awk \'{print $2, $4}\' > temp')
         qreg_creg_map = open('temp','r').readlines()
 
-        FMAP = {}
+        fmap = {}
         for line in qreg_creg_map:
             elements = line.split(' ')
             physical_qs = elements[0]
@@ -171,23 +176,23 @@ class CompileQAOAQiskit:
             physical_q = re.sub('\[|\]','',physical_q)
             logical_q = re.search('\[.*\]',logical_qs).group()
             logical_q = re.sub('\[|\]','',logical_q)
-            FMAP[logical_q[0:]] = int(physical_q[0:])
+            fmap[logical_q[0:]] = int(physical_q[0:])
 
         final_map = []
-        for i in range(qiskit_ckt_object.width()-qiskit_ckt_object.num_qubits):
-            final_map.append(FMAP[str(i)])
+        for i in range(qiskit_ckt_object.width() - qiskit_ckt_object.num_qubits):
+            final_map.append(fmap[str(i)])
         os.system('rm temp')
         os.system('rm tempfile')
         self.final_map = final_map
 
-    def set_initial_layout(self, target_layout=None):
+    def _set_initial_layout(self, target_layout = None):
         """
         This method is used to set initial layout before starting compilation of any circuit block.
         """
         if target_layout:
             self.initial_layout = target_layout
 
-    def sort_zz_by_qq_distances(self, unsorted_ops=None):
+    def _sort_zz_by_qq_distances(self, unsorted_ops = None):
         """
         This method sorts the ZZ operations based on the control-target distances for the current mapping.
         """
@@ -197,7 +202,7 @@ class CompileQAOAQiskit:
         for op in unsorted_ops:
             _physical_q1 = self.initial_layout[op[0]]
             _physical_q2 = self.initial_layout[op[1]]
-            if not self.IncrC_VarAwareness:
+            if not self.incr_c_var_awareness:
                 swap_dist = self.qq_distances[_physical_q1][_physical_q2]
             else:
                 swap_dist = self.noise_aware_qq_distances[_physical_q1][_physical_q2]
@@ -210,14 +215,14 @@ class CompileQAOAQiskit:
             i = 0
             for sop in sorted_ops:
                 if swap_distances_ops[op] < swap_distances_ops[sop]:
-                    sorted_ops.insert(i,op)
+                    sorted_ops.insert(i, op)
                     break
                 i = i + 1
             if i == len(sorted_ops):
                 sorted_ops.append(op)
         self.sorted_ops = sorted_ops
 
-    def construct_single_layer_ckt_ic(self, p):
+    def _construct_single_layer_ckt_ic(self, p):
         """
         This method constructs a single layer of the circuit in incremental compilation.
         """
@@ -226,7 +231,7 @@ class CompileQAOAQiskit:
         for zz in self.layer_zz_assignments['L0']:
             n1 = zz[0]
             n2 = zz[1]
-            gamma = Parameter('g{}_{}_{}'.format(p,n1,n2))
+            gamma = Parameter('g{}_{}_{}'.format(p, n1, n2))
             qc.cx(n1, n2)
             qc.rz(gamma, n2)
             qc.cx(n1, n2)
@@ -236,7 +241,7 @@ class CompileQAOAQiskit:
                 optimization_level = self.Opt_Level, seed_transpiler = self.Trans_Seed, routing_method = self.Route_Method)
         self.circuit =  trans_ckt
 
-    def incremental_compilation(self):
+    def _incremental_compilation(self):
         """
         This method is used for incremental compilation.
         """
@@ -250,18 +255,18 @@ class CompileQAOAQiskit:
         for p in range(1,self.Target_p+1):
             remaining_ops = self.zz_graph.edges()
             while remaining_ops:
-                self.sort_zz_by_qq_distances(unsorted_ops=remaining_ops)
+                self._sort_zz_by_qq_distances(unsorted_ops = remaining_ops)
                 sorted_ops = self.sorted_ops
-                self.instruction_parallelization(sorted_ops,single_layer=True)
+                self._instruction_parallelization(sorted_ops, single_layer = True)
 
                 remaining_ops = self.layer_zz_assignments['R']
 
-                self.construct_single_layer_ckt_ic(p)
+                self._construct_single_layer_ckt_ic(p)
                 new_ckt_segment = self.circuit
 
-                self.final_mapping_ic(qiskit_ckt_object=new_ckt_segment)
+                self._final_mapping_ic(qiskit_ckt_object = new_ckt_segment)
                 final_map = self.final_map
-                self.set_initial_layout(final_map)
+                self._set_initial_layout(final_map)
 
                 new_ckt_segment.remove_final_measurements(inplace=True)
                 incr_c_qc = incr_c_qc + new_ckt_segment
@@ -272,11 +277,11 @@ class CompileQAOAQiskit:
             incr_c_qc.barrier()
 
         for i in range(logical_n):
-            incr_c_qc.measure(self.initial_layout[i],i)
+            incr_c_qc.measure(self.initial_layout[i], i)
 
         self.circuit = incr_c_qc
 
-    def instruction_parallelization(self, sorted_edges=None, single_layer=False):
+    def _instruction_parallelization(self, sorted_edges = None, single_layer = False):
         """
         This method is used for instruction parallelization.
         """
@@ -288,7 +293,7 @@ class CompileQAOAQiskit:
         current_layer = 'L0'
         layer_occupancy = {current_layer: list()}
         for qubit in logical_qubits:
-            layer_occupancy[current_layer].insert(len(layer_occupancy[current_layer]),[qubit,'FREE'])
+            layer_occupancy[current_layer].insert(len(layer_occupancy[current_layer]), [qubit,'FREE'])
         self.layer_zz_assignments[current_layer] = list()
 
         while True:
@@ -296,25 +301,25 @@ class CompileQAOAQiskit:
             allocated_op_count_in_this_layer = 0
             for edge in remaining_edges:
                 if allocated_op_count_in_this_layer >= self.Packing_Limit:
-                    unallocated_edges.insert(len(unallocated_edges),edge)
+                    unallocated_edges.insert(len(unallocated_edges), edge)
                     continue
 
                 n1, n2 = edge[0], edge[1]
                 free_among_the_two = 0
-                
+
                 for occupancy_info_list in layer_occupancy[current_layer]:
                     if occupancy_info_list[0] in edge:
                         if occupancy_info_list[1] == 'OCCUPIED':
-                            unallocated_edges.insert(len(unallocated_edges),edge)
+                            unallocated_edges.insert(len(unallocated_edges), edge)
                             break
-                        else:
-                            free_among_the_two = free_among_the_two + 1
+                        free_among_the_two = free_among_the_two + 1
+
                     if free_among_the_two == 2:
-                        n1_indx = layer_occupancy[current_layer].index([n1,'FREE'])
-                        n2_indx = layer_occupancy[current_layer].index([n2,'FREE'])
-                        layer_occupancy[current_layer][n1_indx] = [n1,'OCCUPIED']
-                        layer_occupancy[current_layer][n2_indx] = [n2,'OCCUPIED']
-                        self.layer_zz_assignments[current_layer].insert(len(layer_occupancy[current_layer]),edge)
+                        n1_indx = layer_occupancy[current_layer].index([n1, 'FREE'])
+                        n2_indx = layer_occupancy[current_layer].index([n2, 'FREE'])
+                        layer_occupancy[current_layer][n1_indx] = [n1, 'OCCUPIED']
+                        layer_occupancy[current_layer][n2_indx] = [n2, 'OCCUPIED']
+                        self.layer_zz_assignments[current_layer].insert(len(layer_occupancy[current_layer]), edge)
                         allocated_op_count_in_this_layer = allocated_op_count_in_this_layer + 1
                         break
 
@@ -323,38 +328,38 @@ class CompileQAOAQiskit:
                 #print('Single layer formed!')
                 self.layer_zz_assignments['R'] = list()
                 for edge in remaining_edges:
-                    self.layer_zz_assignments['R'].insert(0,edge)
+                    self.layer_zz_assignments['R'].insert(0, edge)
                 break
             elif len(remaining_edges) != 0:
-                next_layer = int(current_layer[1:])+1
+                next_layer = int(current_layer[1:]) + 1
                 current_layer = 'L' + str(next_layer)
                 layer_occupancy[current_layer] = list()
                 self.layer_zz_assignments[current_layer] = list()
                 for qubit in logical_qubits:
-                    layer_occupancy[current_layer].insert(len(layer_occupancy[current_layer]),[qubit,'FREE'])
+                    layer_occupancy[current_layer].insert(len(layer_occupancy[current_layer]), [qubit,'FREE'])
             else:
                 #print('All layers formed!')
                 break
 
-    def iterative_compilation(self):
+    def _iterative_compilation(self):
         """
         This method is used for iterative compilation.
         """
         interchange = []
         layer_order = []
-        for L in self.layer_zz_assignments.keys():
-            layer_order.append(L)
+        for l in self.layer_zz_assignments.keys():
+            layer_order.append(l)
 
         opt_target = 10e10
         opt_ckt = QuantumCircuit()
         while True:
             for layer_1 in range(len(layer_order)):
-                for layer_2 in range(layer_1+1,len(layer_order)):
+                for layer_2 in range(layer_1+1, len(layer_order)):
                     temp = layer_order.copy()
                     temp[layer_1], temp[layer_2] = temp[layer_2], temp[layer_1]
-                    self.construct_circuit_iterc(LO=temp)
+                    self._construct_circuit_iterc(layer_order = temp)
                     trial_ckt = self.circuit
-                    self.calc_cost(circ=trial_ckt,Target=self.IterC_Target)
+                    self._calc_cost(circ = trial_ckt, target = self.iter_c_target)
                     trial_target = self.cost
 
                     if trial_target < opt_target:
@@ -365,16 +370,16 @@ class CompileQAOAQiskit:
             if not interchange:
                 self.circuit = opt_ckt
                 break
-            else:
-                layer_1 = interchange[0]
-                layer_2 = interchange[1]
-                layer_order[layer_1], layer_order[layer_2] = layer_order[layer_2], layer_order[layer_1]
-                #print('Interchanged: %s, %s, Cost: %s\n' % (layer_1, layer_2, opt_target))
-                interchange = []
+            
+            layer_1 = interchange[0]
+            layer_2 = interchange[1]
+            layer_order[layer_1], layer_order[layer_2] = layer_order[layer_2], layer_order[layer_1]
+            #print('Interchanged: %s, %s, Cost: %s\n' % (layer_1, layer_2, opt_target))
+            interchange = []
 
-    def calc_cost(self,circ=None,target='GC_2Q'):
+    def _calc_cost(self, circ = None, target = 'GC_2Q'):
         """
-        This method is used to calculate cost of the compiled 
+        This method is used to calculate cost of the compiled
         circuit in terms of depth/2-qubit gate-count/estimated success probability.
         """
         if target == 'GC_2Q':
@@ -383,9 +388,9 @@ class CompileQAOAQiskit:
             self.cost = circ.depth()
         elif target == 'ESP':
             self.circuit = circ
-            self.estimate_sp()
+            self._estimate_sp()
 
-    def estimate_sp(self):
+    def _estimate_sp(self):
         """
         This method estimates the success probability of a compiled circuit.
         """
@@ -404,17 +409,17 @@ class CompileQAOAQiskit:
                     ESP = ESP*float(self.qc_data[gate][str(qub[0])])
                 else:
                     if '({},{})'.format(qub[0],qub[1]) in self.qc_data[gate].keys():
-                        ESP = ESP*float(self.qc_data[gate]['({},{})'.format(qub[0],qub[1])])
+                        ESP = ESP*float(self.qc_data[gate]['({},{})'.format(qub[0], qub[1])])
                     elif '({},{})'.format(qub[1],qub[0]) in self.qc_data[gate].keys():
-                        ESP = ESP*float(self.qc_data[gate]['({},{})'.format(qub[1],qub[0])])
+                        ESP = ESP*float(self.qc_data[gate]['({},{})'.format(qub[1], qub[0])])
                     else:
                         print('Please check the device configuration' +
-                        'file for the following qubit-pair data: {}, {}'.format(qub[0],qub[1]))
+                        'file for the following qubit-pair data: {}, {}'.format(qub[0], qub[1]))
             else:
                 break
         self.cost = -math.log(ESP)
 
-    def construct_circuit_iterc(self,layer_order=None):
+    def _construct_circuit_iterc(self, layer_order = None):
         """
         This method constructs the circuit for iterative compilation.
         """
@@ -424,28 +429,29 @@ class CompileQAOAQiskit:
         for node in self.zz_graph.nodes():
             qc.h(node)
         # change based on the mixing and phase separation layer architectures
-        for p in range(1,self.Target_p+1):
+        for p in range(1, self.Target_p+1):
             for l in layer_order:
                 # phase seperation depends on the number of edges
                 for edge in self.layer_zz_assignments[l]:
                     n1 = edge[0]
                     n2 = edge[1]
-                    gamma = Parameter('g{}_{}_{}'.format(p,n1,n2))
+                    gamma = Parameter('g{}_{}_{}'.format(p, n1, n2))
                     qc.cx(n1, n2)
                     qc.rz(gamma, n2)
                     qc.cx(n1, n2)
             # mixing depends on the number of nodes rx gates
             beta = Parameter('b{}'.format(p))
             for node in self.zz_graph.nodes():
-                qc.rx(beta,node)
+                qc.rx(beta, node)
             qc.barrier()
-        qc.measure(range(n),range(n))
+        qc.measure(range(n), range(n))
+
         trans_ckt = transpile(qc, coupling_map = self.coupling_map,
                 basis_gates = self.basis_gates, initial_layout = self.initial_layout,
                 optimization_level = self.Opt_Level, seed_transpiler = self.Trans_Seed, routing_method = self.Route_Method)
         self.circuit = trans_ckt
 
-    def approximate_equivalence(self,ckt=None):
+    def _approximate_equivalence(self, ckt = None):
         """
         This method checks (approximate) equivalence of the compiled circuit with the original one
         by comparing the output measurements (at a fixed value of all the parameters).
@@ -457,7 +463,7 @@ class CompileQAOAQiskit:
             bind_dic1[param] = val
         for param in self.uncompiled_ckt.parameters:
             bind_dic2[param] = val
-        
+
         ckt1 = ckt.bind_parameters(bind_dic1)
         ckt2 = self.uncompiled_ckt.bind_parameters(bind_dic2)
         backend_sim = Aer.get_backend('qasm_simulator')
@@ -474,73 +480,85 @@ class CompileQAOAQiskit:
 
         if abs_diff/1000000 < 0.01*len(self.zz_graph.nodes()):
             return True
-        else:
-            return False
+        return False
 
-    def qasm_note(self,ckt=None,pol=None):
+    def qasm_note(self, ckt = None, pol = None):
         """
         This method prints notes on the compilation.
         """
-        assert self.approximate_equivalence(ckt) #optional, will not work for larger circuits due to finite sampling errors
+        assert self._approximate_equivalence(ckt) #optional, will not work for larger circuits due to finite sampling errors
         print('##################### Notes on the Output File #############################')
+
         if ckt:
             self.circuit = self.naive_ckt
-            self.estimate_sp()
+            self._estimate_sp()
             print('(naive) Depth: {}, gate-count(2Q): {}, ESP: {}'.format(self.naive_ckt.depth(),
             self.naive_ckt.count_ops()[self.native_2q[0]], math.exp(-self.cost)))
-            
+
             self.circuit = ckt
-            self.estimate_sp()
+            self._estimate_sp()
             print('({}) Depth: {}, gate-count(2Q): {}, ESP: {}'.format(pol, ckt.depth(),
             ckt.count_ops()[self.native_2q[0]], math.exp(-self.cost)))
-            
-            print('The circuit is written with beta/gamma parameters' + 
+
+            print('The circuit is written with beta/gamma parameters' +
             'at different P-lavels (https://arxiv.org/pdf/1411.4028.pdf)')
             print('bX --> beta parameter at p=X')
             print('gX_Y_Z --> gamma parameter at p=X between *logical* ' +
-            'qubit Y and Z. For the MaxCut problem of unweighted graphs, ' + 
+            'qubit Y and Z. For the MaxCut problem of unweighted graphs, ' +
             'gX_Y1_Z1 = gX_Y2_Z2 (https://arxiv.org/pdf/1411.4028.pdf)')
-        else: print('Compilation Error! Please check the input files.')
+        else:
+            print('Compilation Error! Please check the input files.')
+
         print('############################################################################')
 
     def run_ip(self):
         """
         This method runs instruction parallelization.
         """
-        self.instruction_parallelization()
+        self._instruction_parallelization()
         layer_order = self.layer_zz_assignments.keys()
-        self.construct_circuit_iterc(layer_order)
+        self._construct_circuit_iterc(layer_order)
         ckt = self.circuit
         ckt.qasm(filename='IP_'+self.output_file_name)
-        print('############################################################################')
-        print('Instruction Parallelization-only Compilation (IP) completed!' + 
-        '\nQASM File Written: {}'.format('IP_'+self.output_file_name))
-        self.qasm_note(ckt,'IP')
 
-    def run_iter_c(self,Target='D'):
+        print('############################################################################')
+        print('Instruction Parallelization-only Compilation (IP) completed!' +
+        '\nQASM File Written: {}'.format('IP_'+self.output_file_name))
+        self.qasm_note(ckt, 'IP')
+
+    def run_iter_c(self, target = 'D'):
         """
         This method runs iterative compilation.
         """
-        self.set_iterc_target(Target)
-        self.instruction_parallelization()
-        self.iterative_compilation()
+        self._set_iter_c_target(target)
+        self._instruction_parallelization()
+        self._iterative_compilation()
         ckt = self.circuit
         ckt.qasm(filename='IterC_'+self.output_file_name)
-        print('############################################################################')
-        print('Iterative Compilation (IterC) completed!'+ 
-        '\nQASM File Written: {}'.format('IterC_'+self.output_file_name))
-        self.qasm_note(ckt,'IterC_'+Target)
 
-    def run_incr_c(self,VariationAware=False):
+        print('############################################################################')
+        print('Iterative Compilation (IterC) completed!'+
+        '\nQASM File Written: {}'.format('IterC_'+self.output_file_name))
+        self.qasm_note(ckt, 'IterC_'+target)
+
+    def run_incr_c(self, variation_aware = False):
         """
         This method runs incremental compilation.
         """
-        self.set_incrc_var_awareness(VariationAware)
-        self.incremental_compilation()
+        self._set_incrc_var_awareness(variation_aware)
+        self._incremental_compilation()
         ckt = self.circuit
-        ckt.qasm(filename='VIC_'+self.output_file_name) if VariationAware else ckt.qasm(filename='IC_'+self.output_file_name)
+        if variation_aware:
+            ckt.qasm(filename='VIC_'+self.output_file_name)
+        else:
+            ckt.qasm(filename='IC_'+self.output_file_name)
+
         print('############################################################################')
-        if VariationAware: print('Variation-aware Incremental Compilation (VIC) completed!' +
-        '\nQASM File Written: {}'.format('VIC_'+self.output_file_name))
-        else: print('Incremental Compilation (IC) completed!\nQASM File Written: {}'.format('IC_'+self.output_file_name))
-        self.qasm_note(ckt,'VIC') if VariationAware else self.qasm_note(ckt,'IC')
+        if variation_aware:
+            print('Variation-aware Incremental Compilation (VIC) completed!' +
+            '\nQASM File Written: {}'.format('VIC_'+self.output_file_name))
+            self.qasm_note(ckt, 'VIC')
+        else:
+            print('Incremental Compilation (IC) completed!' +
+            '\nQASM File Written: {}'.format('IC_'+self.output_file_name))
+            self.qasm_note(ckt, 'IC')
