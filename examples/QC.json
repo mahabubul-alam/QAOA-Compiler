@@ -1,11 +1,11 @@
 {
-    "1Q": [
+    "1Q": [ //native single-qubit gates of the target hardware
         "id",
         "sx",
         "x",
         "u3"
     ],
-    "2Q": [
+    "2Q": [ //native two-qubit gate of the target hardware
         "cx"
     ],
     "id": {
@@ -97,7 +97,7 @@
         "19": 1
     },
     "cx": {
-        "(3,15)": 0.9629002724287377, //"(qubit1,qubit2)" : success probability of cx
+        "(3,15)": 0.9629002724287377, //"(qubit1,qubit2)" : success probability of cx between qubit1, qubit2 (both directions)
         "(3,7)": 0.9714730308137846,
         "(3,14)": 0.983275403661851,
         "(3,4)": 0.9680294459317054,
