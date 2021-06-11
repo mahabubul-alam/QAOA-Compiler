@@ -11,7 +11,7 @@
 import math
 import re
 import os
-from qiskit import QuantumCircuit, transpile
+from qiskit import QuantumCircuit, transpile, Aer, execute
 import commentjson as json
 import networkx as nx
 from qiskit.circuit import Parameter
@@ -32,7 +32,7 @@ class CompileQAOAQiskit:
         self.sorted_ops = None
         self.cost = 10e10
         self.final_map = []
-        self.naive_ckt = self.naive_compilation()
+        [self.uncompiled_ckt, self.naive_ckt] = self.naive_compilation()
     
     def naive_compilation(self):
         """
@@ -41,7 +41,8 @@ class CompileQAOAQiskit:
         """
         n = len(self.zz_graph.nodes())
         qc = QuantumCircuit(n, n)
-
+        for node in self.zz_graph.nodes():
+            qc.h(node)
         for p in range(1,self.Target_p+1):
             for zz in self.zz_graph.edges():
                 n1 = zz[0]
@@ -60,7 +61,7 @@ class CompileQAOAQiskit:
                 optimization_level = self.Opt_Level, seed_transpiler = self.Trans_Seed, routing_method = self.Route_Method)
         qc.qasm(filename='uncompiled_'+self.output_file_name)
         trans_ckt.qasm(filename='naive_compiled_'+self.output_file_name)
-        return trans_ckt
+        return [qc, trans_ckt]
 
 
     def load_config(self,config_json=None):
@@ -461,11 +462,40 @@ class CompileQAOAQiskit:
                 optimization_level = self.Opt_Level, seed_transpiler = self.Trans_Seed, routing_method = self.Route_Method)
         self.circuit = trans_ckt
 
+    def approximate_equivalence(self,ckt=None):
+        bind_dic1 = {}
+        bind_dic2 = {}
+        val = 1
+        for param in ckt.parameters:
+            bind_dic1[param] = val
+        for param in self.uncompiled_ckt.parameters:
+            bind_dic2[param] = val
+        
+        ckt1 = ckt.bind_parameters(bind_dic1)
+        ckt2 = self.uncompiled_ckt.bind_parameters(bind_dic2)
+        backend_sim = Aer.get_backend('qasm_simulator')
+        job_sim = execute([ckt1, ckt2], backend_sim, shots=1000000)
+        result_sim = job_sim.result()
+        counts1 = result_sim.get_counts(ckt1)
+        counts2 = result_sim.get_counts(ckt2)
+        abs_diff = 0
+        for key in counts1.keys():
+            try:
+                abs_diff += abs(counts1[key] - counts2[key])
+            except:
+                abs_diff += counts1[key]
+
+        if abs_diff/1000000 < 0.01*len(self.zz_graph.nodes()):
+            return True
+        else:
+            return False
+
 
     def qasm_note(self,ckt=None,pol=None):
         """
         This method prints notes on the compilation.
         """
+        #assert self.approximate_equivalence(ckt)
         print('##################### Notes on the Output File #############################')
         if ckt:
             self.circuit = self.naive_ckt
