@@ -14,6 +14,7 @@ This repository includes implementations of QAOA-specific compilation policies d
 ## Environment Setup
 ```
 git clone https://github.com/mahabubul-alam/QAOA-Compiler.git
+cd QAOA-Compiler
 conda create -n XX python=3.6.13
 conda activate XX
 pip install -r requirements.txt
