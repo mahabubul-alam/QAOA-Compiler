@@ -16,4 +16,4 @@ for i, edge in enumerate(g.edges()):
     dic['{}'.format(i+1)] = "{}".format(edge)
 #saving the graph as a json file
 with open('QAOA_circ.json','w') as fp:
-    json.dump(dic,fp)
+    json.dump(dic,fp,indent=4)
