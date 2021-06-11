@@ -31,7 +31,7 @@
         "19": 1
     },
     "sx": {
-        "0": 1, //"qubit" : success probability of sx
+        "0": 1, //"qubit" : success probability of sx 
         "1": 1,
         "2": 1,
         "3": 1,
