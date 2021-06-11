@@ -13,6 +13,6 @@ for i, edge in enumerate(g.edges()):
 
 print(dic)
 
-with open('result.json','w') as fp:
+with open('QAOA_circ.json','w') as fp:
     json.dump(dic,fp)
 
