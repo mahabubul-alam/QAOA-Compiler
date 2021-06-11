@@ -52,7 +52,7 @@ python main.py -d Examples/QC.json -ci Examples/QAOA_circ.json -co Examples/Conf
 ```
 ############################################################################
 Variation-aware Incremental Compilation (VIC) completed!
-QASM File Written: QAOA.qasm
+QASM File Written: VIC_QAOA.qasm
 ##################### Notes on the Output File #############################
 (naive) Depth: 219, Gate-count(2Q): 259, ESP: 0.0008273849796816141
 (VIC) Depth: 90, Gate-count(2Q): 251, ESP: 0.0012532391570381667
