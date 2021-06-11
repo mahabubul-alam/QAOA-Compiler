@@ -522,7 +522,7 @@ class CompileQAOAQiskit:
         ckt = self.circuit
         ckt.qasm(filename='IP_'+self.output_file_name)
         print('############################################################################')
-        print('Instruction Parallelization-only Compilation (IP) completed! \nQASM File Written: {}'.format(self.output_file_name))
+        print('Instruction Parallelization-only Compilation (IP) completed! \nQASM File Written: {}'.format('IP_'+self.output_file_name))
         self.qasm_note(ckt,'IP')
 
 
@@ -536,7 +536,7 @@ class CompileQAOAQiskit:
         ckt = self.circuit
         ckt.qasm(filename='IterC_'+self.output_file_name)
         print('############################################################################')
-        print('Iterative Compilation (IterC) completed! \nQASM File Written: {}'.format(self.output_file_name))
+        print('Iterative Compilation (IterC) completed! \nQASM File Written: {}'.format('IterC_'+self.output_file_name))
         self.qasm_note(ckt,'IterC_'+Target)
 
 
@@ -549,6 +549,6 @@ class CompileQAOAQiskit:
         ckt = self.circuit
         ckt.qasm(filename='VIC_'+self.output_file_name) if Variation_Aware else ckt.qasm(filename='IC_'+self.output_file_name)
         print('############################################################################')
-        if Variation_Aware: print('Variation-aware Incremental Compilation (VIC) completed!\nQASM File Written: {}'.format(self.output_file_name))
-        else: print('Incremental Compilation (IC) completed!\nQASM File Written: {}'.format(self.output_file_name))
+        if Variation_Aware: print('Variation-aware Incremental Compilation (VIC) completed!\nQASM File Written: {}'.format('VIC_'+self.output_file_name))
+        else: print('Incremental Compilation (IC) completed!\nQASM File Written: {}'.format('IC_'+self.output_file_name))
         self.qasm_note(ckt,'VIC') if Variation_Aware else self.qasm_note(ckt,'IC')
