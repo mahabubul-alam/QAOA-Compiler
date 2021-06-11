@@ -13,6 +13,7 @@ This repository includes implementations of QAOA-specific compilation policies d
 
 ## Environment Setup
 ```
+git clone https://github.com/mahabubul-alam/QAOA-Compiler.git
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
