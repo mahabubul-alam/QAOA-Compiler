@@ -370,7 +370,7 @@ class CompileQAOAQiskit:
             if not interchange:
                 self.circuit = opt_ckt
                 break
-            
+
             layer_1 = interchange[0]
             layer_2 = interchange[1]
             layer_order[layer_1], layer_order[layer_2] = layer_order[layer_2], layer_order[layer_1]
@@ -548,17 +548,15 @@ class CompileQAOAQiskit:
         self._set_incrc_var_awareness(variation_aware)
         self._incremental_compilation()
         ckt = self.circuit
-        if variation_aware:
-            ckt.qasm(filename='VIC_'+self.output_file_name)
-        else:
-            ckt.qasm(filename='IC_'+self.output_file_name)
 
         print('############################################################################')
         if variation_aware:
+            ckt.qasm(filename='VIC_'+self.output_file_name)
             print('Variation-aware Incremental Compilation (VIC) completed!' +
             '\nQASM File Written: {}'.format('VIC_'+self.output_file_name))
             self._qasm_note(ckt, 'VIC')
         else:
+            ckt.qasm(filename='IC_'+self.output_file_name)
             print('Incremental Compilation (IC) completed!' +
             '\nQASM File Written: {}'.format('IC_'+self.output_file_name))
             self._qasm_note(ckt, 'IC')
