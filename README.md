@@ -13,7 +13,7 @@ This repository includes implementations of QAOA-specific compilation policies d
 
 
 ## Structure
-* [CompileQAOA](https://github.com/mahabubul-alam/QAOA_Compiler/tree/main/CompileQAOA): Python Class implementation of the compilation policies.
+* [compile_qaoa](https://github.com/mahabubul-alam/QAOA-Compiler/tree/main/compile_qaoa): Python Class implementation of the compilation policies.
 * [Examples](https://github.com/mahabubul-alam/QAOA_Compiler/tree/main/Examples): Sample input files to the compiler.
 
 ## How to Run
