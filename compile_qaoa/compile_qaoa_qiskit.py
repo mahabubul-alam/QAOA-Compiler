@@ -463,6 +463,10 @@ class CompileQAOAQiskit:
         self.circuit = trans_ckt
 
     def approximate_equivalence(self,ckt=None):
+        """
+        This method checks (approximate) equivalence of the compiled circuit with the original one
+        by comparing the output measurements (at a fixed value of all the parameters).
+        """
         bind_dic1 = {}
         bind_dic2 = {}
         val = 1
@@ -495,7 +499,7 @@ class CompileQAOAQiskit:
         """
         This method prints notes on the compilation.
         """
-        #assert self.approximate_equivalence(ckt)
+        assert self.approximate_equivalence(ckt) #optional, will not work for larger circuits due to finite sampling errors
         print('##################### Notes on the Output File #############################')
         if ckt:
             self.circuit = self.naive_ckt
