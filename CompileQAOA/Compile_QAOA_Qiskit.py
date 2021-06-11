@@ -15,7 +15,6 @@ from qiskit.circuit import Parameter
 from qiskit import *
 import math
 import re
-import time
 
 class Compile_QAOA_Qiskit:
     def __init__(self, Circuit_json=None, QC_json=None, Config_json=None, Out_Circuit_File_Name='QAOA.qasm'):
