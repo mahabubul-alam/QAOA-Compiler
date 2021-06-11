@@ -11,6 +11,12 @@ This repository includes implementations of QAOA-specific compilation policies d
 * **networkx==2.5**
 * **commentjson==0.9.0**
 
+### Environment Setup
+```
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
 
 ## Structure
 * [compile_qaoa](https://github.com/mahabubul-alam/QAOA-Compiler/tree/main/compile_qaoa): Python Class implementation of the compilation policies.
@@ -47,12 +53,7 @@ python main.py -d Examples/QC.json -ci Examples/QAOA_circ.json -co Examples/Conf
 * A sample file can be found [here](https://github.com/mahabubul-alam/QAOA_Compiler/blob/main/QAOA.qasm)
 
 
-### Environment Setup
-```
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
+
 
 ## Citation
 ```
