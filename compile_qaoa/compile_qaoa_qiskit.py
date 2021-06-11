@@ -269,15 +269,12 @@ class CompileQAOAQiskit:
             beta = Parameter('b{}'.format(p))
             for node in range(logical_n):
                 IncrC_qc.rx(beta,self.initial_layout[node])
-
             IncrC_qc.barrier()
 
         for i in range(logical_n):
             IncrC_qc.measure(self.initial_layout[i],i)
 
         self.circuit = IncrC_qc
-
-
 
     def instruction_parallelization(self, Sorted_Edges=None, Single_Layer=False):
         """
@@ -288,7 +285,6 @@ class CompileQAOAQiskit:
             Remaining_edges = Sorted_Edges.copy()
         else:
             Remaining_edges = list(self.zz_graph.edges())
-
         Current_layer = 'L0'
         Layer_occupancy = {Current_layer: list()}
         for qubit in Logical_qubits:
@@ -323,7 +319,6 @@ class CompileQAOAQiskit:
                         break
 
             Remaining_edges = Unallocated_edges
-
             if Single_Layer:
                 #print('Single layer formed!')
                 self.layer_zz_assignments['R'] = list()
@@ -352,16 +347,13 @@ class CompileQAOAQiskit:
 
         opt_target = 10e10
         opt_ckt = QuantumCircuit()
-
         while True:
             for layer_1 in range(len(LOO)):
                 for layer_2 in range(layer_1+1,len(LOO)):
                     Temp = LOO.copy()
                     Temp[layer_1], Temp[layer_2] = Temp[layer_2], Temp[layer_1]
-
                     self.construct_circuit_iterc(LO=Temp)
                     trial_ckt = self.circuit
-
                     self.calc_cost(circ=trial_ckt,Target=self.IterC_Target)
                     trial_target = self.cost
 
@@ -392,7 +384,6 @@ class CompileQAOAQiskit:
         elif Target == 'ESP':
             self.circuit = circ
             self.estimate_sp()
-
 
     def estimate_sp(self):
         """
@@ -429,7 +420,6 @@ class CompileQAOAQiskit:
         """
         n = len(self.zz_graph.nodes())
         qc = QuantumCircuit(n, n)
-
         # superposition state applying hadamard to all the qubits
         for node in self.zz_graph.nodes():
             qc.h(node)
@@ -444,7 +434,6 @@ class CompileQAOAQiskit:
                     qc.cx(n1, n2)
                     qc.rz(gamma, n2)
                     qc.cx(n1, n2)
-
             # mixing depends on the number of nodes rx gates
             beta = Parameter('b{}'.format(p))
             for node in self.zz_graph.nodes():
