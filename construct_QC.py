@@ -33,4 +33,4 @@ for edge in coupling_graph.edges():
 dic['{}'.format(two_q_gate[0])] = tdic
 
 with open('QC.json','w') as fp:
-    json.dump(dic,fp)
+    json.dump(dic,fp,indent=4)
