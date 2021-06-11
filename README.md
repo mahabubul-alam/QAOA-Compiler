@@ -11,7 +11,7 @@ This repository includes implementations of QAOA-specific compilation policies d
 * **networkx==2.5**
 * **commentjson==0.9.0**
 
-### Environment Setup
+## Environment Setup
 ```
 python3 -m venv venv
 source venv/bin/activate
