@@ -48,9 +48,11 @@ python main.py -d Examples/QC.json -ci Examples/QAOA_circ.json -co Examples/Conf
 
 
 ### Environment Setup
-* python3 -m venv venv
-* source venv/bin/activate
-* pip install -r requirements.txt
+```
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
 
 ## Citation
 ```
