@@ -9,7 +9,7 @@ import networkx as nx
 single_q_gates = ['id','sx','x','u3']
 #Two qubit native gate supported by the hardware,
 #current compiler implementation assumes that the hardware
-#supports only 1 two-qubit operation
+#supports only 1 two-qubit operation (cx)
 two_q_gate = ['cx']
 
 Q = 20
