@@ -27,6 +27,6 @@ for edge in coupling_graph.edges():
     tdic['({},{})'.format(edge[0],edge[1])] = random.uniform(0.96,0.99)
 dic['{}'.format(gate)] = tdic
 
-with open('result.json','w') as fp:
+with open('QC.json','w') as fp:
     json.dump(dic,fp)
 
