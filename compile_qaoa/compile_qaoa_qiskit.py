@@ -32,6 +32,36 @@ class CompileQAOAQiskit:
         self.sorted_ops = None
         self.cost = 10e10
         self.final_map = []
+        self.naive_ckt = self.naive_compilation()
+    
+    def naive_compilation(self):
+        """
+        This method constructs performs a naive compilation with the qiskit backend.
+        (gates are randomly ordered).
+        """
+        n = len(self.zz_graph.nodes())
+        qc = QuantumCircuit(n, n)
+
+        for p in range(1,self.Target_p+1):
+            for zz in self.zz_graph.edges():
+                n1 = zz[0]
+                n2 = zz[1]
+                gamma = Parameter('g{}_{}_{}'.format(p,n1,n2))
+                qc.cx(n1, n2)
+                qc.rz(gamma, n2)
+                qc.cx(n1, n2)
+            beta = Parameter('b{}'.format(p))
+            for node in self.zz_graph.nodes():
+                qc.rx(beta,node)
+            qc.barrier()
+        qc.measure(range(n), range(n))
+        trans_ckt = transpile(qc, coupling_map = self.Coupling_Map, \
+                basis_gates = self.Basis_Gates, initial_layout = self.initial_layout, \
+                optimization_level = self.Opt_Level, seed_transpiler = self.Trans_Seed, routing_method = self.Route_Method)
+        qc.qasm(filename='uncompiled_'+self.output_file_name)
+        trans_ckt.qasm(filename='naive_compiled_'+self.output_file_name)
+        return trans_ckt
+
 
     def load_config(self,config_json=None):
         """
@@ -432,15 +462,19 @@ class CompileQAOAQiskit:
         self.circuit = trans_ckt
 
 
-    def qasm_note(self,ckt=None):
+    def qasm_note(self,ckt=None,pol=None):
         """
         This method prints notes on the compilation.
         """
         print('##################### Notes on the Output File #############################')
         if ckt:
+            self.circuit = self.naive_ckt
+            self.estimate_sp()
+            print('(naive) Depth: {}, Gate-count(2Q): {}, ESP: {}'.format(self.naive_ckt.depth(), self.naive_ckt.count_ops()[self.Native_2Q[0]], math.exp(-self.cost)))
             self.circuit = ckt
             self.estimate_sp()
-            print('Depth: {}, Gate-count(2Q): {}, ESP: {}'.format(ckt.depth(), ckt.count_ops()[self.Native_2Q[0]], math.exp(-self.cost)))
+            print('({}) Depth: {}, Gate-count(2Q): {}, ESP: {}'.format(pol, ckt.depth(), ckt.count_ops()[self.Native_2Q[0]], math.exp(-self.cost)))
+            
             print('The circuit is written with beta/gamma parameters at different P-lavels (https://arxiv.org/pdf/1411.4028.pdf)')
             print('bX --> beta parameter at p=X')
             print('gX_Y_Z --> gamma parameter at p=X between *logical* qubit Y and Z. For the MaxCut problem of unweighted graphs, gX_Y1_Z1 = gX_Y2_Z2 (https://arxiv.org/pdf/1411.4028.pdf)')
@@ -456,10 +490,10 @@ class CompileQAOAQiskit:
         LO = self.layer_zz_assignments.keys()
         self.construct_circuit_iterc(LO)
         ckt = self.circuit
-        ckt.qasm(filename=self.output_file_name)
+        ckt.qasm(filename='IP_'+self.output_file_name)
         print('############################################################################')
         print('Instruction Parallelization-only Compilation (IP) completed! \nQASM File Written: {}'.format(self.output_file_name))
-        self.qasm_note(ckt)
+        self.qasm_note(ckt,'IP')
 
 
     def run_IterC(self,Target='D'):
@@ -470,10 +504,10 @@ class CompileQAOAQiskit:
         self.instruction_parallelization()
         self.iterative_compilation()
         ckt = self.circuit
-        ckt.qasm(filename=self.output_file_name)
+        ckt.qasm(filename='IterC_'+self.output_file_name)
         print('############################################################################')
         print('Iterative Compilation (IterC) completed! \nQASM File Written: {}'.format(self.output_file_name))
-        self.qasm_note(ckt=ckt)
+        self.qasm_note(ckt,'IterC_'+Target)
 
 
     def run_IncrC(self,Variation_Aware=False):
@@ -483,8 +517,8 @@ class CompileQAOAQiskit:
         self.set_incrc_var_awarenes(Variation_Aware)
         self.incremental_compilation()
         ckt = self.circuit
-        ckt.qasm(filename=self.output_file_name)
+        ckt.qasm(filename='VIC_'+self.output_file_name) if Variation_Aware else ckt.qasm(filename='IC_'+self.output_file_name)
         print('############################################################################')
         if Variation_Aware: print('Variation-aware Incremental Compilation (VIC) completed!\nQASM File Written: {}'.format(self.output_file_name))
         else: print('Incremental Compilation (IC) completed!\nQASM File Written: {}'.format(self.output_file_name))
-        self.qasm_note(ckt)
+        self.qasm_note(ckt,'VIC') if Variation_Aware else self.qasm_note(ckt,'IC')
