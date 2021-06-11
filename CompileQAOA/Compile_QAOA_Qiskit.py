@@ -60,9 +60,17 @@ class Compile_QAOA_Qiskit:
 
         with open(QC_file) as f:
             self.QC_DATA = json.load(f)
+        
 
-        self.Native_2Q = eval(self.QC_DATA['2Q'].strip('"'))
-        self.Native_1Q = eval(self.QC_DATA['1Q'].strip('"'))
+        try:
+            self.Native_2Q = eval(self.QC_DATA['2Q'].strip('"'))
+        except:
+            self.Native_2Q = self.QC_DATA['2Q']
+        try:    
+            self.Native_1Q = eval(self.QC_DATA['1Q'].strip('"'))
+        except:
+            self.Native_1Q = self.QC_DATA['1Q']
+
         self.Basis_Gates = self.Native_2Q + self.Native_1Q
         
         self.Coupling_Map = []
@@ -73,6 +81,9 @@ class Compile_QAOA_Qiskit:
             if [n2,n1] not in self.Coupling_Map:
                 self.Coupling_Map.append([n2,n1])
         
+        #import pdb
+        #pdb.set_trace()
+
         self.Calc_QQ_Distances()
 
     def Calc_QQ_Distances(self):
