@@ -23,6 +23,7 @@ pip install -r requirements.txt
 ## Structure
 * [compile_qaoa](https://github.com/mahabubul-alam/QAOA-Compiler/tree/main/compile_qaoa): Python Class implementation of the compilation policies.
 * [examples](https://github.com/mahabubul-alam/QAOA_Compiler/tree/main/examples): Sample input files and outputs.
+* [utils](https://github.com/mahabubul-alam/QAOA_Compiler/tree/main/utils): Helper scripts to generate input json files.
 
 ## How to Run
 ```
