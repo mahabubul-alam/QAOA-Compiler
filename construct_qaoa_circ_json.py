@@ -5,8 +5,8 @@ circuit for graphs defined as a networkx graph object.
 import json
 import networkx as nx
 
-N = 19 #number of nodes
-P = 0.8 #edge probability to generate erdos-renyi-random graph
+N = 10 #number of nodes
+P = 0.6 #edge probability to generate erdos-renyi-random graph
 SEED = 0 #random seed value
 g = nx.erdos_renyi_graph(N,P,seed=SEED) #networkx graph object
 
