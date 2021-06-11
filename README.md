@@ -48,6 +48,20 @@ python main.py -device_json Examples/QC.json -circuit_json Examples/QAOA_circ.js
 python main.py -d Examples/QC.json -ci Examples/QAOA_circ.json -co Examples/Config.json  -p VIC
 ```
 
+### Printed in the Terminal
+```
+############################################################################
+Variation-aware Incremental Compilation (VIC) completed!
+QASM File Written: QAOA.qasm
+##################### Notes on the Output File #############################
+(naive) Depth: 219, Gate-count(2Q): 259, ESP: 0.0008273849796816141
+(VIC) Depth: 90, Gate-count(2Q): 251, ESP: 0.0012532391570381667
+The circuit is written with beta/gamma parameters at different P-lavels (https://arxiv.org/pdf/1411.4028.pdf)
+bX --> beta parameter at p=X
+gX_Y_Z --> gamma parameter at p=X between *logical* qubit Y and Z. For the MaxCut problem of unweighted graphs, gX_Y1_Z1 = gX_Y2_Z2 (https://arxiv.org/pdf/1411.4028.pdf)
+############################################################################
+```
+
 ### Notes on the Output File
 * The circuit is written with beta/gamma parameters at different P-lavels (https://arxiv.org/pdf/1411.4028.pdf)
 * bX --> beta parameter at p=X
