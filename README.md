@@ -42,10 +42,10 @@ python main.py -arg arg_val
 
 ### Running the Example
 ```
-python main.py -device_json Examples/QC.json -circuit_json Examples/QAOA_circ.json -config_json Examples/Config.json  -policy_compilation VIC
+python main.py -device_json examples/QC.json -circuit_json examples/QAOA_circ.json -config_json examples/Config.json  -policy_compilation VIC
 ```
 ```
-python main.py -d Examples/QC.json -ci Examples/QAOA_circ.json -co Examples/Config.json  -p VIC
+python main.py -d examples/QC.json -ci examples/QAOA_circ.json -co examples/Config.json  -p VIC
 ```
 
 ### Printed in the Terminal
