@@ -242,10 +242,10 @@ class CompileQAOAQiskit:
         """
         logical_n = len(self.zz_graph.nodes())
         physical_n = len(self.unweighted_undirected_coupling_graph.nodes())
-        IncrC_qc = QuantumCircuit(physical_n, logical_n)
+        incr_c_qc = QuantumCircuit(physical_n, logical_n)
 
         for i in range(logical_n):
-            IncrC_qc.h(self.initial_layout[i])
+            incr_c_qc.h(self.initial_layout[i])
 
         for p in range(1,self.Target_p+1):
             remaining_ops = self.zz_graph.edges()
@@ -264,17 +264,17 @@ class CompileQAOAQiskit:
                 self.set_initial_layout(final_map)
 
                 new_ckt_segment.remove_final_measurements(inplace=True)
-                IncrC_qc = IncrC_qc + new_ckt_segment
+                incr_c_qc = incr_c_qc + new_ckt_segment
 
             beta = Parameter('b{}'.format(p))
             for node in range(logical_n):
-                IncrC_qc.rx(beta,self.initial_layout[node])
-            IncrC_qc.barrier()
+                incr_c_qc.rx(beta,self.initial_layout[node])
+            incr_c_qc.barrier()
 
         for i in range(logical_n):
-            IncrC_qc.measure(self.initial_layout[i],i)
+            incr_c_qc.measure(self.initial_layout[i],i)
 
-        self.circuit = IncrC_qc
+        self.circuit = incr_c_qc
 
     def instruction_parallelization(self, sorted_edges=None, single_layer=False):
         """
@@ -372,16 +372,16 @@ class CompileQAOAQiskit:
                 #print('Interchanged: %s, %s, Cost: %s\n' % (layer_1, layer_2, opt_target))
                 interchange = []
 
-    def calc_cost(self,circ=None,Target='GC_2Q'):
+    def calc_cost(self,circ=None,target='GC_2Q'):
         """
         This method is used to calculate cost of the compiled 
         circuit in terms of depth/2-qubit gate-count/estimated success probability.
         """
-        if Target == 'GC_2Q':
+        if target == 'GC_2Q':
             self.cost = circ.count_ops()[self.native_2q[0]]
-        elif Target == 'D':
+        elif target == 'D':
             self.cost = circ.depth()
-        elif Target == 'ESP':
+        elif target == 'ESP':
             self.circuit = circ
             self.estimate_sp()
 
@@ -414,7 +414,7 @@ class CompileQAOAQiskit:
                 break
         self.cost = -math.log(ESP)
 
-    def construct_circuit_iterc(self,LO=None):
+    def construct_circuit_iterc(self,layer_order=None):
         """
         This method constructs the circuit for iterative compilation.
         """
@@ -425,9 +425,9 @@ class CompileQAOAQiskit:
             qc.h(node)
         # change based on the mixing and phase separation layer architectures
         for p in range(1,self.Target_p+1):
-            for L in LO:
+            for l in layer_order:
                 # phase seperation depends on the number of edges
-                for edge in self.layer_zz_assignments[L]:
+                for edge in self.layer_zz_assignments[l]:
                     n1 = edge[0]
                     n2 = edge[1]
                     gamma = Parameter('g{}_{}_{}'.format(p,n1,n2))
@@ -508,8 +508,8 @@ class CompileQAOAQiskit:
         This method runs instruction parallelization.
         """
         self.instruction_parallelization()
-        LO = self.layer_zz_assignments.keys()
-        self.construct_circuit_iterc(LO)
+        layer_order = self.layer_zz_assignments.keys()
+        self.construct_circuit_iterc(layer_order)
         ckt = self.circuit
         ckt.qasm(filename='IP_'+self.output_file_name)
         print('############################################################################')
