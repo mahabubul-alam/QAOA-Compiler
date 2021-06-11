@@ -1,5 +1,5 @@
 { //Required ZZ interations between qubit pairs to encode the cost Hamiltonian of a QAOA problem instance (e.g. MaxCut) into a parametric circuit. Format- "Num" : "(q1,q2)"
-    "1": "(0, 3)", // A ZZ interaction between qubit 6 and 12
+    "1": "(0, 3)", // A ZZ interaction between qubit 0 and 3
     "2": "(0, 4)",
     "3": "(0, 5)",
     "4": "(0, 6)",

@@ -31,10 +31,10 @@ if __name__ == '__main__':
     if os.path.isfile(args.QCD) and os.path.isfile(args.CKT) and os.path.isfile(args.CON):
         comp_obj = cqq.CompileQAOAQiskit(Circuit_json=args.CKT, \
             QC_json=args.QCD, Config_json=args.CON, Out_Circuit_File_Name=args.OUT)
-        if args.POL == 'IP': comp_obj.run_IP()
-        elif args.POL == 'IterC': comp_obj.run_IterC(Target=args.TAR)
-        elif args.POL == 'IC': comp_obj.run_IncrC()
-        elif args.POL == 'VIC': comp_obj.run_IncrC(Variation_Aware=True)
+        if args.POL == 'IP': comp_obj.run_ip()
+        elif args.POL == 'IterC': comp_obj.run_iter_c(Target=args.TAR)
+        elif args.POL == 'IC': comp_obj.run_incr_c()
+        elif args.POL == 'VIC': comp_obj.run_incr_c(Variation_Aware=True)
     else:
         print('Please provide valid paths to the input files.')
         
