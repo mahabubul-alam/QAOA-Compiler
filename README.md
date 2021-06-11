@@ -47,6 +47,11 @@ python main.py -d Examples/QC.json -ci Examples/QAOA_circ.json -co Examples/Conf
 * A sample file can be found [here](https://github.com/mahabubul-alam/QAOA_Compiler/blob/main/QAOA.qasm)
 
 
+### Environment Setup
+* python3 -m venv venv
+* source venv/bin/activate
+* pip install -r requirements.txt
+
 ## Citation
 ```
 @inproceedings{alam2020circuit,
