@@ -24,12 +24,12 @@ dic['2Q'] = two_q_gate
 for gate in single_q_gates:
     tdic = {}
     for q in range(Q):
-        tdic['{}'.format(q)] = 1
+        tdic['{}'.format(q)] = 1 #single-qubit gate success probability
     dic['{}'.format(gate)] = tdic
 
 tdic = {}
 for edge in coupling_graph.edges():
-    tdic['({},{})'.format(edge[0],edge[1])] = random.uniform(0.96,0.99)
+    tdic['({},{})'.format(edge[0],edge[1])] = random.uniform(0.96,0.99) #two-qubit gate success probability
 dic['{}'.format(two_q_gate[0])] = tdic
 
 with open('QC.json','w') as fp:
