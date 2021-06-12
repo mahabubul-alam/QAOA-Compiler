@@ -279,7 +279,7 @@ class CompileQAOAQiskit:
         supported features of the new backend.
         6) Update the __load_config method as well if you are adding new variables in Config.json.
         """
-        assert isinstance(ckt_qiskit,QuantumCircuit)
+        assert isinstance(ckt_qiskit, QuantumCircuit)
         if self.Backend == 'qiskit':
             return transpile(ckt_qiskit, coupling_map = self.coupling_map,
                 basis_gates = self.basis_gates, initial_layout = self.initial_layout,
