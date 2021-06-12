@@ -19,6 +19,21 @@ import commentjson as json
 import networkx as nx
 
 class CompileQAOAQiskit:
+    """
+    This class implements the QAOA-specific compilation policies
+    described in the following articles
+    https://ieeexplore.ieee.org/document/9251960
+    https://ieeexplore.ieee.org/document/9218558
+    https://ieeexplore.ieee.org/document/9256490
+    After crating the object, compilation can be performed with the chosen compilation
+    policies using the following public methods:
+        run_ip
+        run_iter_c
+        run_incr_c
+    The current implementation only supports compilation with qiskit compiler backend.
+    Necessary instrcutions are given under __compile_with_backend method docstring
+    to add support for other compilers (e.g. tket).
+    """
     def __init__(self, circuit_json = None,
     qc_json = None, config_json = None, out_circuit_file_name = 'QAOA.qasm'):
         """
