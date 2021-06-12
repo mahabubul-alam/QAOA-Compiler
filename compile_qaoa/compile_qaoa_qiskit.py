@@ -60,7 +60,7 @@ class CompileQAOAQiskit:
             qc.barrier()
         qc.measure(range(n), range(n))
 
-        trans_ckt = self.__compile_with_backend(ckt_qasm = qc)
+        trans_ckt = self.__compile_with_backend(ckt_qiskit = qc)
         qc.qasm(filename='uncompiled_'+self.output_file_name)
         trans_ckt.qasm(filename='naive_compiled_' + self.output_file_name)
         return [qc, trans_ckt]
@@ -240,10 +240,10 @@ class CompileQAOAQiskit:
             qc.rz(gamma, n2)
             qc.cx(n1, n2)
         qc.measure(range(n), range(n))
-        trans_ckt = self.__compile_with_backend(ckt_qasm = qc)
+        trans_ckt = self.__compile_with_backend(ckt_qiskit = qc)
         self.circuit =  trans_ckt
 
-    def __compile_with_backend(self, ckt_qasm = None):
+    def __compile_with_backend(self, ckt_qiskit = None):
         """
         This method performs full/partial circuit compilation using the chosen backend.
         This method can be extended to support other compilers (e.g. tket).
@@ -264,9 +264,9 @@ class CompileQAOAQiskit:
         supported features of the new backend.
         6) Update the __load_config method as well if you are adding new variables in Config.json.
         """
-        assert ckt_qasm
+        assert isinstance(ckt_qiskit,QuantumCircuit)
         if self.Backend == 'qiskit':
-            return transpile(ckt_qasm, coupling_map = self.coupling_map,
+            return transpile(ckt_qiskit, coupling_map = self.coupling_map,
                 basis_gates = self.basis_gates, initial_layout = self.initial_layout,
                 optimization_level = self.Opt_Level, seed_transpiler = self.Trans_Seed,
                 routing_method = self.Route_Method)
@@ -476,7 +476,7 @@ class CompileQAOAQiskit:
             qc.barrier()
         qc.measure(range(n), range(n))
 
-        trans_ckt = self.__compile_with_backend(ckt_qasm = qc)
+        trans_ckt = self.__compile_with_backend(ckt_qiskit = qc)
         self.circuit = trans_ckt
 
     def __approximate_equivalence(self, ckt = None):
