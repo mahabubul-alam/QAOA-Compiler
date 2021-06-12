@@ -247,6 +247,8 @@ class CompileQAOAQiskit:
         """
         This method performs full/partial circuit compilation using the chosen backend.
         This method can be extended to support other compilers (e.g. tket).
+        If you are adding a new backend, please update the supported_backends variable
+        under __init__ as well.
         """
         assert ckt_qasm
         if self.Backend == 'qiskit':
