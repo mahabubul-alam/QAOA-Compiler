@@ -254,8 +254,8 @@ class CompileQAOAQiskit:
         if self.Backend == 'qiskit':
             return transpile(ckt_qasm, coupling_map = self.coupling_map,
                 basis_gates = self.basis_gates, initial_layout = self.initial_layout,
-                optimization_level = self.Opt_Level, seed_transpiler = self.Trans_Seed, routing_method = self.Route_Method)
-
+                optimization_level = self.Opt_Level, seed_transpiler = self.Trans_Seed,
+                routing_method = self.Route_Method)
 
     def __incremental_compilation(self):
         """
