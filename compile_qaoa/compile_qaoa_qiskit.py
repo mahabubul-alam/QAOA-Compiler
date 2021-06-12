@@ -532,7 +532,8 @@ class CompileQAOAQiskit:
         """
         This method prints notes on the compilation.
         """
-        assert self.__approximate_equivalence(ckt) #optional, will not work for larger circuits due to finite sampling errors
+        #optional, will not work for larger circuits due to finite sampling errors
+        assert self.__approximate_equivalence(ckt)
         print('##################### Notes on the Output File #############################')
 
         if ckt:
