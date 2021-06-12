@@ -27,7 +27,7 @@ pip install -r requirements.txt
 
 ## How to Run
 ```
-python main.py -arg arg_val
+python run.py -arg arg_val
 ```
 * -device_json string (mandatory): Target device configuration file location. This file holds the information on basis gates, reliability, and allowed two-qubit operations. It has to be written in json format. An example can be found [here](https://github.com/mahabubul-alam/QAOA_Compiler/blob/main/examples/QC.json).
 
@@ -43,10 +43,10 @@ python main.py -arg arg_val
 
 ### Running the Example
 ```
-python main.py -device_json examples/QC.json -circuit_json examples/QAOA_circ.json -config_json examples/Config.json  -policy_compilation VIC
+python run.py -device_json examples/QC.json -circuit_json examples/QAOA_circ.json -config_json examples/Config.json  -policy_compilation VIC
 ```
 ```
-python main.py -d examples/QC.json -ci examples/QAOA_circ.json -co examples/Config.json  -p VIC
+python run.py -d examples/QC.json -ci examples/QAOA_circ.json -co examples/Config.json  -p VIC
 ```
 
 ### Printed in the Terminal
