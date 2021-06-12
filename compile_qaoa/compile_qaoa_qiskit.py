@@ -24,6 +24,7 @@ class CompileQAOAQiskit:
         """
         This method initializes necessary config variables.
         """
+        self.supported_backends = ['qiskit']
         self.__load_config(config_json)
         self.output_file_name = out_circuit_file_name
         self.__extract_qc_data(qc_json)
@@ -59,10 +60,7 @@ class CompileQAOAQiskit:
             qc.barrier()
         qc.measure(range(n), range(n))
 
-        trans_ckt = transpile(qc, coupling_map = self.coupling_map,
-                basis_gates = self.basis_gates, initial_layout = self.initial_layout,
-                optimization_level = self.Opt_Level, seed_transpiler = self.Trans_Seed, routing_method = self.Route_Method)
-
+        trans_ckt = self.__compile_with_backend(ckt_qasm = qc)
         qc.qasm(filename='uncompiled_'+self.output_file_name)
         trans_ckt.qasm(filename='naive_compiled_' + self.output_file_name)
         return [qc, trans_ckt]
@@ -94,6 +92,12 @@ class CompileQAOAQiskit:
             self.Opt_Level = int(self.config['Opt_Level'])
         else:
             self.Opt_Level = 1
+        if 'Backend' in self.config.keys():
+            self.Backend = str(self.config['Backend'])
+            assert self.Backend in self.supported_backends
+        else:
+            self.Backend = 'qiskit'
+            assert self.Backend in self.supported_backends
 
     def __extract_qc_data(self, qc_file = None):
         """
@@ -236,10 +240,20 @@ class CompileQAOAQiskit:
             qc.rz(gamma, n2)
             qc.cx(n1, n2)
         qc.measure(range(n), range(n))
-        trans_ckt = transpile(qc, coupling_map = self.coupling_map,
+        trans_ckt = self.__compile_with_backend(ckt_qasm = qc)
+        self.circuit =  trans_ckt
+
+    def __compile_with_backend(self, ckt_qasm = None):
+        """
+        This method performs full/partial circuit compilation using the chosen backend.
+        This method can be extended to support other compilers (e.g. tket).
+        """
+        assert ckt_qasm
+        if self.Backend == 'qiskit':
+            return transpile(ckt_qasm, coupling_map = self.coupling_map,
                 basis_gates = self.basis_gates, initial_layout = self.initial_layout,
                 optimization_level = self.Opt_Level, seed_transpiler = self.Trans_Seed, routing_method = self.Route_Method)
-        self.circuit =  trans_ckt
+
 
     def __incremental_compilation(self):
         """
@@ -446,9 +460,7 @@ class CompileQAOAQiskit:
             qc.barrier()
         qc.measure(range(n), range(n))
 
-        trans_ckt = transpile(qc, coupling_map = self.coupling_map,
-                basis_gates = self.basis_gates, initial_layout = self.initial_layout,
-                optimization_level = self.Opt_Level, seed_transpiler = self.Trans_Seed, routing_method = self.Route_Method)
+        trans_ckt = self.__compile_with_backend(ckt_qasm = qc)
         self.circuit = trans_ckt
 
     def __approximate_equivalence(self, ckt = None):
@@ -513,7 +525,7 @@ class CompileQAOAQiskit:
 
     def run_ip(self):
         """
-        This method runs instruction parallelization.
+        This public method runs instruction parallelization.
         """
         self.__instruction_parallelization()
         layer_order = self.layer_zz_assignments.keys()
@@ -528,7 +540,7 @@ class CompileQAOAQiskit:
 
     def run_iter_c(self, target = 'D'):
         """
-        This method runs iterative compilation.
+        This public method runs iterative compilation.
         """
         self.__set_iter_c_target(target)
         self.__instruction_parallelization()
@@ -543,7 +555,7 @@ class CompileQAOAQiskit:
 
     def run_incr_c(self, variation_aware = False):
         """
-        This method runs incremental compilation.
+        This public method runs incremental compilation.
         """
         self.__set_incrc_var_awareness(variation_aware)
         self.__incremental_compilation()
