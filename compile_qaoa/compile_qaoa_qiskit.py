@@ -560,7 +560,8 @@ class CompileQAOAQiskit:
 
     def run_ip(self):
         """
-        This public method runs instruction parallelization.
+        This public method runs instruction parallelization and writes the circuits
+        in qasm format.
         """
         self.__instruction_parallelization()
         layer_order = self.layer_zz_assignments.keys()
@@ -575,7 +576,11 @@ class CompileQAOAQiskit:
 
     def run_iter_c(self, target = 'D'):
         """
-        This public method runs iterative compilation.
+        This public method runs iterative compilation and writes the circuits
+        in qasm format.
+        Args:
+            Target minimization objective: D (depth), GC-2Q (two-qubit gate-count),
+            ESP (estimated success probability)
         """
         self.__set_iter_c_target(target)
         self.__instruction_parallelization()
@@ -590,7 +595,10 @@ class CompileQAOAQiskit:
 
     def run_incr_c(self, variation_aware = False):
         """
-        This public method runs incremental compilation.
+        This public method runs incremental compilation and writes the circuits
+        in qasm format.
+        Args:
+            variation_aware (boolean) - False to perform IC and True to perform VIC
         """
         self.__set_incrc_var_awareness(variation_aware)
         self.__incremental_compilation()
