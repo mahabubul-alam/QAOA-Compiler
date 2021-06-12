@@ -516,10 +516,13 @@ class CompileQAOAQiskit:
         counts2 = result_sim.get_counts(ckt2)
         abs_diff = 0
         for key in counts1.keys():
-            try:
+            if key in counts2.keys():
                 abs_diff += abs(counts1[key] - counts2[key])
-            except:
+            else:
                 abs_diff += counts1[key]
+        for key in counts2.keys():
+            if key not in counts1.keys():
+                abs_diff += counts2[key]
 
         if abs_diff/1000000 < 0.01*len(self.zz_graph.nodes()):
             return True
