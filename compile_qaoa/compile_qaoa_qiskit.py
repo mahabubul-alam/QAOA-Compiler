@@ -247,15 +247,22 @@ class CompileQAOAQiskit:
         """
         This method performs full/partial circuit compilation using the chosen backend.
         This method can be extended to support other compilers (e.g. tket).
-        1) The target backend should support parametric circuit compilation from a given 
-        qiskit QuantumCircuit object with the target basis gates. 
-        2) It should be able to recognize CX, RZ(theta), RX(theta), and H operations. 
+        1) The target backend should support parametric circuit compilation from a given
+        qiskit QuantumCircuit object with the target basis gates, given initial layout,
+        and target hardware coupling map.
+        initial layout format: [1 2 0 ...] (means q0 --> p1, q1 --> p2, q2 --> p0 ...)
+                                qX: logical qubit, pX: physical qubit
+        coupling map format: [[0,1],[1,0]...] (means the native 2q gate supported between
+                                0 and 1, 1 and 0, ....)
+        basis gates format: ['x', 'cx' ...]
+        2) It should be able to recognize CX, RZ(theta), RX(theta), and H operations.
         3) It should return the compiled circuit as a qiskit QuantumCircuit object. If it
-        does not do so, please convert the compiled circuit file to a qiskit QuantumCircuit object.
+        does not do so, please convert the compiled circuit to a qiskit QuantumCircuit object.
         4) If you are adding a new backend, please update the supported_backends variable
         under __init__ as well.
-        5) Use/add config variables in the Config.json (see under examples) file based on the 
-        supported features of the new backend 
+        5) Use/add config variables in the Config.json (see under examples) file based on the
+        supported features of the new backend.
+        6) Update the __load_config method as well if you are adding new variables in Config.json.
         """
         assert ckt_qasm
         if self.Backend == 'qiskit':
