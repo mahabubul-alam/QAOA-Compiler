@@ -560,7 +560,7 @@ class CompileQAOAQiskit:
 
     def run_ip(self):
         """
-        This public method runs instruction parallelization and writes the circuits
+        This public method runs instruction parallelization and writes the output circuits
         in qasm format.
         args:
             No arguments required.
@@ -578,7 +578,7 @@ class CompileQAOAQiskit:
 
     def run_iter_c(self, target = 'D'):
         """
-        This public method runs iterative compilation and writes the circuits
+        This public method runs iterative compilation and writes the output circuits
         in qasm format.
         Args:
             Target minimization objective: D (depth), GC-2Q (two-qubit gate-count),
@@ -597,7 +597,7 @@ class CompileQAOAQiskit:
 
     def run_incr_c(self, variation_aware = False):
         """
-        This public method runs incremental compilation and writes the circuits
+        This public method runs incremental compilation and writes the output circuits
         in qasm format.
         Args:
             variation_aware (boolean) - False to perform IC and True to perform VIC
