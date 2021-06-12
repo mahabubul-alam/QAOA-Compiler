@@ -562,6 +562,8 @@ class CompileQAOAQiskit:
         """
         This public method runs instruction parallelization and writes the circuits
         in qasm format.
+        args:
+            No arguments required.
         """
         self.__instruction_parallelization()
         layer_order = self.layer_zz_assignments.keys()
