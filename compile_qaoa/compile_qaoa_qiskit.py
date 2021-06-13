@@ -561,7 +561,7 @@ class CompileQAOAQiskit:
             ckt.count_ops()[self.native_2q[0]], math.exp(-self.cost)))
 
             print('The circuit is written with beta/gamma parameters' +
-            'at different P-lavels (https://arxiv.org/pdf/1411.4028.pdf)')
+            'at different p-lavels (https://arxiv.org/pdf/1411.4028.pdf)')
             print('bX --> beta parameter at p=X')
             print('gX_Y_Z --> gamma parameter at p=X between *logical* ' +
             'qubit Y and Z. For the MaxCut problem of unweighted graphs, ' +

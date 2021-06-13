@@ -15,6 +15,8 @@ def create_initial_layout(coupling_graph, problem_zz_interactions_graph, method 
         method - chosen initial layout method (qaim/vqp)
         FW - qubit-to-qubit distances (floyd-warshall), if not provided, 
             it is computed inside initial_layout method.
+    Returns:
+        initial layout in as a list.
     """
     layout = initial_layout(coupling_graph, problem_zz_interactions_graph, method = method, FW = FW)
     return list(layout.values())
