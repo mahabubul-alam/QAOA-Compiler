@@ -13,6 +13,8 @@
 import math
 import re
 import os
+from . initial_layout_qaoa import create_initial_layout
+from random import shuffle
 from qiskit.circuit import Parameter
 from qiskit import QuantumCircuit, transpile, Aer, execute
 import commentjson as json
@@ -40,12 +42,13 @@ class CompileQAOAQiskit:
         This method initializes necessary config variables.
         """
         self.supported_backends = ['qiskit']
+        self.supported_initial_layout_strategies = ['qaim','vqp','random']
         self.__load_config(config_json)
         self.output_file_name = out_circuit_file_name
         self.__extract_qc_data(qc_json)
         self.layer_zz_assignments = {}
         self.zz_graph = self.qaoa_zz_graph(circuit_json)
-        self.initial_layout = list(range(len(self.zz_graph.nodes())))
+        self.__set_initial_layout()
         self.circuit = None
         self.sorted_ops = None
         self.cost = 10e10
@@ -113,6 +116,12 @@ class CompileQAOAQiskit:
         else:
             self.Backend = 'qiskit'
             assert self.Backend in self.supported_backends
+        if 'Initial_Layout_Strategy' in self.config.keys():
+            self.Initial_Layout_Strategy = str(self.config['Initial_Layout_Strategy'])
+            assert self.Initial_Layout_Strategy in self.supported_initial_layout_strategies
+        else:
+            self.Initial_Layout_Strategy = 'random'
+            assert self.Initial_Layout_Strategy in self.supported_initial_layout_strategies
 
     def __extract_qc_data(self, qc_file = None):
         """
@@ -210,6 +219,14 @@ class CompileQAOAQiskit:
         """
         if target_layout:
             self.initial_layout = target_layout
+        else:
+            if self.Initial_Layout_Strategy == 'qaim':
+                self.initial_layout = create_initial_layout(self.weighted_undirected_coupling_graph, self.zz_graph, method = 'qaim')
+            elif self.Initial_Layout_Strategy == 'vqp':
+                self.initial_layout = create_initial_layout(self.weighted_undirected_coupling_graph, self.zz_graph, method = 'vqp')
+            else:
+                self.initial_layout = list(range(len(self.zz_graph.nodes())))
+                shuffle(self.initial_layout) #default: random
 
     def __sort_zz_by_qq_distances(self, unsorted_ops = None):
         """
@@ -572,7 +589,7 @@ class CompileQAOAQiskit:
         ckt.qasm(filename='IP_'+self.output_file_name)
 
         print('############################################################################')
-        print('Instruction Parallelization-only Compilation (IP) completed!' +
+        print('Instruction Parallelization-only Compilation (IP) completed (initial layout: {})!'.format(self.Initial_Layout_Strategy) +
         '\nQASM File Written: {}'.format('IP_'+self.output_file_name))
         self.__qasm_note(ckt, 'IP')
 
@@ -591,7 +608,7 @@ class CompileQAOAQiskit:
         ckt.qasm(filename='IterC_'+self.output_file_name)
 
         print('############################################################################')
-        print('Iterative Compilation (IterC) completed!'+
+        print('Iterative Compilation (IterC) completed (initial layout: {})!'.format(self.Initial_Layout_Strategy) +
         '\nQASM File Written: {}'.format('IterC_'+self.output_file_name))
         self.__qasm_note(ckt, 'IterC_'+target)
 
@@ -609,11 +626,11 @@ class CompileQAOAQiskit:
         print('############################################################################')
         if variation_aware:
             ckt.qasm(filename='VIC_'+self.output_file_name)
-            print('Variation-aware Incremental Compilation (VIC) completed!' +
+            print('Variation-aware Incremental Compilation (VIC) completed (initial layout: {})!'.format(self.Initial_Layout_Strategy) +
             '\nQASM File Written: {}'.format('VIC_'+self.output_file_name))
             self.__qasm_note(ckt, 'VIC')
         else:
             ckt.qasm(filename='IC_'+self.output_file_name)
-            print('Incremental Compilation (IC) completed!' +
+            print('Incremental Compilation (IC) completed (initial layout: {})!'.format(self.Initial_Layout_Strategy) +
             '\nQASM File Written: {}'.format('IC_'+self.output_file_name))
             self.__qasm_note(ckt, 'IC')
