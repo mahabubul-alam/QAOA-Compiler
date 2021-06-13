@@ -6,14 +6,15 @@ for QAOA workloads described in the following articles:
 """
 import networkx as nx
 
-def create_initial_layout(coupling_graph, problem_zz_interactions_graph, method = 'qaim', FW = None):
+def create_initial_layout(coupling_graph, problem_zz_interactions_graph, \
+    method = 'qaim', FW = None):
     """
     returns the initial layout as a list.
     Args:
         coupling_graph - hardware coupling graph
         problem_zz_interactions_graph - problem qaoa zz interactions graph
         method - chosen initial layout method (qaim/vqp)
-        FW - qubit-to-qubit distances (floyd-warshall), if not provided, 
+        FW - qubit-to-qubit distances (floyd-warshall), if not provided,
             it is computed inside initial_layout method.
     Returns:
         initial layout in as a list.
@@ -40,7 +41,7 @@ def initial_layout(coupling_graph, problem_zz_interactions_graph, method = 'qaim
 
     #assign physical qubits to logical qubits using Noise-adaptive QAIM
     if method == 'vqp':
-        qubit_strengths_dict = hardware_qubit_strength_vqp(coupling_graph)   #QAIM only (not noise adaptive)::
+        qubit_strengths_dict = hardware_qubit_strength_vqp(coupling_graph)
     else:
         qubit_strengths_dict = hardware_qubit_strength_qaim(coupling_graph)
 
@@ -54,7 +55,8 @@ def initial_layout(coupling_graph, problem_zz_interactions_graph, method = 'qaim
             if logical_to_physical_layout[neigh] != 'NA':
                 placed_neighbors.append(neigh)
 
-        #assign best available physical qubit to logical qubit if none of the logical neighbors are placed
+        #assign best available physical qubit to logical
+        #qubit if none of the logical neighbors are placed
         if placed_neighbors == []:
             for physical_qubit in sorted_physical_qubits:
                 if physical_qubit not in allocated_physical_qubits:
@@ -81,15 +83,16 @@ def initial_layout(coupling_graph, problem_zz_interactions_graph, method = 'qaim
                         break
                 continue
 
-            #sort the unallocated physical qubits based on link strength / distance from placed neighbors - metric
+            #sort the unallocated physical qubits based on
+            #link strength / distance from placed neighbors - metric
             metric_of_unalloc_from_placed_neighbors = {}
             for element in unallocated_physical_neighbors:
                 cumulative_distance = 0
                 for qubit in placed_neighbors:
                     allocated_physical = logical_to_physical_layout[qubit]
-                    #cumulative_distance = cumulative_distance + nx.shortest_path_length(coupling_graph,element,allocated_physical)
                     cumulative_distance = cumulative_distance + FW[element][allocated_physical]
-                metric_of_unalloc_from_placed_neighbors[element] = qubit_strengths_dict[element]/cumulative_distance
+                metric_of_unalloc_from_placed_neighbors[element] = \
+                    qubit_strengths_dict[element]/cumulative_distance
             #sorting procedure
             sorted_unallocated_physical_neighbors = []
             for element in unallocated_physical_neighbors:
@@ -99,7 +102,8 @@ def initial_layout(coupling_graph, problem_zz_interactions_graph, method = 'qaim
                 i = 0
                 done = 'NO'
                 for unc in sorted_unallocated_physical_neighbors:
-                    if metric_of_unalloc_from_placed_neighbors[element] > metric_of_unalloc_from_placed_neighbors[unc]:
+                    if metric_of_unalloc_from_placed_neighbors[element] > \
+                        metric_of_unalloc_from_placed_neighbors[unc]:
                         sorted_unallocated_physical_neighbors.insert(i,element)
                         done = 'YES'
                         break
@@ -120,7 +124,7 @@ def sort_program_qubits(problem_zz_interactions_graph):
     """
     problem_profile = problem_profiling(problem_zz_interactions_graph)
     sorted_program_qubits = []
-    for key in problem_profile.keys():
+    for key in problem_profile:
         if sorted_program_qubits == []:
             sorted_program_qubits.append(key)
             #print(sorted_program_qubits)
@@ -146,12 +150,14 @@ def problem_profiling(problem_zz_interactions_graph):
     Returns:
         Dictionary (number of zz gates on each qubit)
     """
-    ps = {}
+    pp_dict = {}
     for node in problem_zz_interactions_graph.nodes():
-        ps[node] = 0
-        for neigh in problem_zz_interactions_graph.neighbors(node):
-            ps[node] = ps[node] + 1
-    return ps
+        try:
+            pp_dict[node] = sum(1 for _ in problem_zz_interactions_graph.neighbors(node))
+        except TypeError:
+            pp_dict[node] = 0
+            print('Unconnected node: {}'.format(node))
+    return pp_dict
 
 def hardware_qubit_strength_vqp(coupling_graph):
     """
@@ -163,14 +169,14 @@ def hardware_qubit_strength_vqp(coupling_graph):
     Returns:
          Dictionary holding the connectivity strenths of every qubit.
     """
-    cls = {}
+    con_strengths = {}
     for node in coupling_graph.nodes():
         neighbours = coupling_graph.neighbors(node)
-        ls = 0
+        strength = 0
         for neigh in neighbours:
-            ls = ls + coupling_graph[node][neigh]['weight']
-        cls[node] = ls
-    return cls
+            strength += coupling_graph[node][neigh]['weight']
+        con_strengths[node] = strength
+    return con_strengths
 
 def hardware_qubit_strength_qaim(coupling_graph):
     """
@@ -182,14 +188,14 @@ def hardware_qubit_strength_qaim(coupling_graph):
     Returns:
         Dictionary holding the connectivity strenths of every qubit.
     """
-    ds = nx.floyd_warshall(coupling_graph)
-    cs = {}
+    distances = nx.floyd_warshall(coupling_graph)
+    con_strengths = {}
     for node in coupling_graph.nodes():
-        cs[node] = 0
+        con_strengths[node] = 0
         for node2 in coupling_graph.nodes():
-            if ds[node][node2] == 1 or ds[node][node2] == 2:
-                cs[node] = cs[node] + 1
-    return cs
+            if distances[node][node2] == 1 or distances[node][node2] == 2:
+                con_strengths[node] = con_strengths[node] + 1
+    return con_strengths
 
 def sort_physical_qubits(physical_qubit_profile):
     """
@@ -226,14 +232,16 @@ if __name__ == '__main__':
     hw_coupling_graph = nx.Graph()
     device = FakeTokyo()
     cmap = device.configuration().coupling_map
-    for method in ['qaim', 'vqp']:
+    for init_layout_method in ['qaim', 'vqp']:
         for edge in cmap:
-            w = 1 #qaim
-            if method == 'vqp':
-                w = 1-device.properties().gate_error('cx', edge)
-            hw_coupling_graph.add_edge(edge[0], edge[1], weight = w)
-        for i in range(20):
-            problem_zz_interaction_graph = nx.erdos_renyi_graph(19, 0.7, seed=i)
-            il = initial_layout(hw_coupling_graph, problem_zz_interaction_graph, method = method)
+            if init_layout_method == 'vqp':
+                weight = 1-device.properties().gate_error('cx', edge)
+            else:
+                weight = 1 #qaim
+            hw_coupling_graph.add_edge(edge[0], edge[1], weight = weight)
+        for seed in range(20):
+            problem_zz_interaction_graph = nx.erdos_renyi_graph(19, 0.7, seed=seed)
+            il = initial_layout(hw_coupling_graph, \
+                problem_zz_interaction_graph, method = init_layout_method)
             assert len(set(il.keys())) == len(set(il.values()))
             print(il)
