@@ -48,7 +48,7 @@ class CompileQAOAQiskit:
         self.__extract_qc_data(qc_json)
         self.layer_zz_assignments = {}
         self.zz_graph = self.qaoa_zz_graph(circuit_json)
-        self.__set_initial_layout()
+        self.initial_layout = list(range(len(self.zz_graph.nodes())))
         self.circuit = None
         self.sorted_ops = None
         self.cost = 10e10
@@ -116,12 +116,6 @@ class CompileQAOAQiskit:
         else:
             self.Backend = 'qiskit'
             assert self.Backend in self.supported_backends
-        if 'Initial_Layout_Strategy' in self.config.keys():
-            self.Initial_Layout_Strategy = str(self.config['Initial_Layout_Strategy'])
-            assert self.Initial_Layout_Strategy in self.supported_initial_layout_strategies
-        else:
-            self.Initial_Layout_Strategy = 'random'
-            assert self.Initial_Layout_Strategy in self.supported_initial_layout_strategies
 
     def __extract_qc_data(self, qc_file = None):
         """
@@ -213,20 +207,22 @@ class CompileQAOAQiskit:
         os.system('rm tempfile')
         self.final_map = final_map
 
-    def __set_initial_layout(self, target_layout = None):
+    def __set_initial_layout(self, target_layout = None, initial_layout_method = None):
         """
         This method is used to set initial layout before starting compilation of any circuit block.
         """
         if target_layout:
             self.initial_layout = target_layout
-        else:
-            if self.Initial_Layout_Strategy == 'qaim':
+        elif initial_layout_method:
+            if initial_layout_method == 'qaim':
                 self.initial_layout = create_initial_layout(self.weighted_undirected_coupling_graph, self.zz_graph, method = 'qaim')
-            elif self.Initial_Layout_Strategy == 'vqp':
+            elif initial_layout_method == 'vqp':
                 self.initial_layout = create_initial_layout(self.weighted_undirected_coupling_graph, self.zz_graph, method = 'vqp')
-            else:
+            elif initial_layout_method == 'random':
                 self.initial_layout = list(range(len(self.zz_graph.nodes())))
                 shuffle(self.initial_layout) #default: random
+            else:
+                raise ValueError
 
     def __sort_zz_by_qq_distances(self, unsorted_ops = None):
         """
@@ -575,13 +571,14 @@ class CompileQAOAQiskit:
 
         print('############################################################################')
 
-    def run_ip(self):
+    def run_ip(self, initial_layout_method = 'qaim'):
         """
         This public method runs instruction parallelization and writes the output circuits
         in qasm format.
         args:
             No arguments required.
         """
+        self.__set_initial_layout(initial_layout_method = initial_layout_method)
         self.__instruction_parallelization()
         layer_order = self.layer_zz_assignments.keys()
         self.__construct_circuit_iterc(layer_order)
@@ -589,11 +586,11 @@ class CompileQAOAQiskit:
         ckt.qasm(filename='IP_'+self.output_file_name)
 
         print('############################################################################')
-        print('Instruction Parallelization-only Compilation (IP) completed (initial layout: {})!'.format(self.Initial_Layout_Strategy) +
+        print('Instruction Parallelization-only Compilation (IP) completed (initial layout: {})!'.format(initial_layout_method) +
         '\nQASM File Written: {}'.format('IP_'+self.output_file_name))
         self.__qasm_note(ckt, 'IP')
 
-    def run_iter_c(self, target = 'D'):
+    def run_iter_c(self, target = 'D', initial_layout_method = 'qaim'):
         """
         This public method runs iterative compilation and writes the output circuits
         in qasm format.
@@ -601,6 +598,7 @@ class CompileQAOAQiskit:
             Target minimization objective: D (depth), GC-2Q (two-qubit gate-count),
             ESP (estimated success probability)
         """
+        self.__set_initial_layout(initial_layout_method = initial_layout_method)
         self.__set_iter_c_target(target)
         self.__instruction_parallelization()
         self.__iterative_compilation()
@@ -608,17 +606,18 @@ class CompileQAOAQiskit:
         ckt.qasm(filename='IterC_'+self.output_file_name)
 
         print('############################################################################')
-        print('Iterative Compilation (IterC) completed (initial layout: {})!'.format(self.Initial_Layout_Strategy) +
+        print('Iterative Compilation (IterC) completed (initial layout: {})!'.format(initial_layout_method) +
         '\nQASM File Written: {}'.format('IterC_'+self.output_file_name))
         self.__qasm_note(ckt, 'IterC_'+target)
 
-    def run_incr_c(self, variation_aware = False):
+    def run_incr_c(self, variation_aware = False, initial_layout_method = 'qaim'):
         """
         This public method runs incremental compilation and writes the output circuits
         in qasm format.
         Args:
             variation_aware (boolean) - False to perform IC and True to perform VIC
         """
+        self.__set_initial_layout(initial_layout_method = initial_layout_method)
         self.__set_incrc_var_awareness(variation_aware)
         self.__incremental_compilation()
         ckt = self.circuit
@@ -626,11 +625,11 @@ class CompileQAOAQiskit:
         print('############################################################################')
         if variation_aware:
             ckt.qasm(filename='VIC_'+self.output_file_name)
-            print('Variation-aware Incremental Compilation (VIC) completed (initial layout: {})!'.format(self.Initial_Layout_Strategy) +
+            print('Variation-aware Incremental Compilation (VIC) completed (initial layout: {})!'.format(initial_layout_method) +
             '\nQASM File Written: {}'.format('VIC_'+self.output_file_name))
             self.__qasm_note(ckt, 'VIC')
         else:
             ckt.qasm(filename='IC_'+self.output_file_name)
-            print('Incremental Compilation (IC) completed (initial layout: {})!'.format(self.Initial_Layout_Strategy) +
+            print('Incremental Compilation (IC) completed (initial layout: {})!'.format(initial_layout_method) +
             '\nQASM File Written: {}'.format('IC_'+self.output_file_name))
             self.__qasm_note(ckt, 'IC')

@@ -22,6 +22,9 @@ parser.add_argument("-target_IterC", help="Chosen minimization objective" +
 "heuristic, IterC minimizes: Depth (D) or Two-qubit gate-count (GC_2Q)" +
 "or Estimated Success Probability (ESP)",
 type=str, default='GC_2Q', action='store', dest='TAR')
+parser.add_argument("-initial_layout_method", help="Name of the initial layout method. " +
+"Supported methods: qaim, vqp, random",
+type=str, default='qaim', action='store', dest='ILM')
 parser.add_argument("-output_qasm_file_name", help="Name of the output file" +
 "to write compiled circuit description in QASM format",
 type=str, default='QAOA.qasm', action='store', dest='OUT')
@@ -30,16 +33,16 @@ args = parser.parse_args()
 
 if __name__ == '__main__':
     if os.path.isfile(args.QCD) and os.path.isfile(args.CKT) and os.path.isfile(args.CON):
-        comp_obj = cqq.CompileQAOAQiskit(circuit_json=args.CKT, \
-            qc_json=args.QCD, config_json=args.CON, out_circuit_file_name=args.OUT)
+        comp_obj = cqq.CompileQAOAQiskit(circuit_json = args.CKT, \
+            qc_json = args.QCD, config_json = args.CON, out_circuit_file_name = args.OUT)
         if args.POL == 'IP':
-            comp_obj.run_ip()
+            comp_obj.run_ip(initial_layout_method = args.ILM)
         elif args.POL == 'IterC':
-            comp_obj.run_iter_c(target=args.TAR)
+            comp_obj.run_iter_c(target = args.TAR, initial_layout_method = args.ILM)
         elif args.POL == 'IC':
-            comp_obj.run_incr_c()
+            comp_obj.run_incr_c(initial_layout_method = args.ILM)
         elif args.POL == 'VIC':
-            comp_obj.run_incr_c(variation_aware=True)
+            comp_obj.run_incr_c(variation_aware = True, initial_layout_method = args.ILM)
     else:
         print('Please provide valid paths to the input files.')
         
