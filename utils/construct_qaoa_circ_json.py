@@ -1,6 +1,7 @@
 """
 This script can be used to construct QAOA-MaxCut
-circuit for graphs defined as a networkx graph object.
+circuit json (an input to the compiler)
+from graphs defined as networkx graph objects.
 """
 import json
 import networkx as nx

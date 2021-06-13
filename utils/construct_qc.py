@@ -1,5 +1,7 @@
 """
-This script can be used/modified to create custom quantum hardware configuration file.
+This script can be used/modified to create
+custom quantum hardware configuration file
+(an input to the compiler).
 """
 import json
 import random
