@@ -9,6 +9,12 @@ import networkx as nx
 def create_initial_layout(coupling_graph, problem_zz_interactions_graph, method = 'qaim', FW = None):
     """
     returns the initial layout as a list.
+    Args:
+        coupling_graph - hardware coupling graph
+        problem_zz_interactions_graph - problem qaoa zz interactions graph
+        method - chosen initial layout method (qaim/vqp)
+        FW - qubit-to-qubit distances (floyd-warshall), if not provided, 
+            it is computed inside initial_layout method.
     """
     layout = initial_layout(coupling_graph, problem_zz_interactions_graph, method = method, FW = FW)
     return list(layout.values())
