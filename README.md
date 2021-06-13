@@ -52,12 +52,12 @@ python run.py -d examples/QC.json -ci examples/QAOA_circ.json -co examples/Confi
 ### Printed in the Terminal
 ```
 ############################################################################
-Variation-aware Incremental Compilation (VIC) completed!
+Variation-aware Incremental Compilation (VIC) completed (initial layout: vqp)!
 QASM File Written: VIC_QAOA.qasm
 ##################### Notes on the Output File #############################
-(naive) Depth: 219, Gate-count(2Q): 259, ESP: 0.0008273849796816141
-(VIC) Depth: 90, Gate-count(2Q): 251, ESP: 0.0012532391570381667
-The circuit is written with beta/gamma parameters at different p-lavels (https://arxiv.org/pdf/1411.4028.pdf)
+(naive) Depth: 128, gate-count(2Q): 227, ESP: 0.0019301743858659978
+(VIC) Depth: 69, gate-count(2Q): 151, ESP: 0.015510689327353987
+The circuit is written with beta/gamma parametersat different P-lavels (https://arxiv.org/pdf/1411.4028.pdf)
 bX --> beta parameter at p=X
 gX_Y_Z --> gamma parameter at p=X between *logical* qubit Y and Z. For the MaxCut problem of unweighted graphs, gX_Y1_Z1 = gX_Y2_Z2 (https://arxiv.org/pdf/1411.4028.pdf)
 ############################################################################
