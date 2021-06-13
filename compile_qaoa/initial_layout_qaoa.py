@@ -1,3 +1,9 @@
+"""
+This module holds implementation of the initial qubit mapping strategies
+for QAOA workloads described in the following articles:
+    https://ieeexplore.ieee.org/document/9251960
+    https://ieeexplore.ieee.org/document/9256490
+"""
 import networkx as nx
 
 def create_initial_layout(coupling_graph, problem_zz_interactions_graph, method = 'qaim', FW = None):
@@ -26,10 +32,10 @@ def initial_layout(coupling_graph, problem_zz_interactions_graph, method = 'qaim
 
     #assign physical qubits to logical qubits using Noise-adaptive QAIM
     if method == 'vqp':
-        qubit_strengths_dict = hardware_qubit_strength_vqp(coupling_graph)   #QAIM only (not noise adaptive):: 
+        qubit_strengths_dict = hardware_qubit_strength_vqp(coupling_graph)   #QAIM only (not noise adaptive)::
     else:
         qubit_strengths_dict = hardware_qubit_strength_qaim(coupling_graph)
-    
+
     sorted_physical_qubits = sort_physical_qubits(qubit_strengths_dict)
     allocated_physical_qubits = []
 
@@ -205,7 +211,6 @@ def sort_physical_qubits(physical_qubit_profile):
             sorted_physical_qubits.append(key)
         #print(sorted_physical_qubits)
     return sorted_physical_qubits
-
 
 if __name__ == '__main__':
     #testing the above functions
