@@ -39,14 +39,16 @@ python run.py -arg arg_val
 
 * -target_IterC string: Minimization objective of Iterative Compilation. The current version supports the following minimization objectives: Circuit Depth ('D'), Native two-qubit gate-count ('GC_2Q'), Estimated Success Probability ('ESP'). The default value is 'GC_2Q'.
 
+* -initial_layout_method string: The chosen initial layout method. Currently supported methods: vqp, qaim, random.
+
 * -output_qasm_file_name string: File name to write the compiled parametric QAOA circuit. The output is written in qasm format. The default value is 'QAOA.qasm'. The output qasm files are written following this naming style: {Method(IP/IC/VIC/IterC)}_{output_qasm_file_name}.
 
 ### Running the Example
 ```
-python run.py -device_json examples/QC.json -circuit_json examples/QAOA_circ.json -config_json examples/Config.json  -policy_compilation VIC
+python run.py -device_json examples/QC.json -circuit_json examples/QAOA_circ.json -config_json examples/Config.json  -policy_compilation VIC -initial_layout_method vqp
 ```
 ```
-python run.py -d examples/QC.json -ci examples/QAOA_circ.json -co examples/Config.json  -p VIC
+python run.py -d examples/QC.json -ci examples/QAOA_circ.json -co examples/Config.json  -p VIC -i vqp
 ```
 
 ### Printed in the Terminal
