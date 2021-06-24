@@ -19,6 +19,7 @@ from qiskit.circuit import Parameter
 from qiskit import QuantumCircuit, transpile, Aer, execute
 import commentjson as json
 import networkx as nx
+from qiskit.quantum_info.analysis import hellinger_fidelity
 
 class CompileQAOAQiskit:
     """
@@ -527,19 +528,7 @@ class CompileQAOAQiskit:
         result_sim = job_sim.result()
         counts1 = result_sim.get_counts(ckt1)
         counts2 = result_sim.get_counts(ckt2)
-        abs_diff = 0
-        for key in counts1.keys():
-            if key in counts2.keys():
-                abs_diff += abs(counts1[key] - counts2[key])
-            else:
-                abs_diff += counts1[key]
-        for key in counts2.keys():
-            if key not in counts1.keys():
-                abs_diff += counts2[key]
-
-        if abs_diff/1000000 < 0.01*len(self.zz_graph.nodes()):
-            return True
-        return False
+        return hellinger_fidelity(counts1, counts2) > 0.9
 
     def __qasm_note(self, ckt = None, pol = None):
         """
