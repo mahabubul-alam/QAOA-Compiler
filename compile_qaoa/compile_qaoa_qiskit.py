@@ -84,7 +84,6 @@ class CompileQAOAQiskit:
         qc.measure(range(n), range(n))
 
         trans_ckt = self.__compile_with_backend(ckt_qiskit = qc)
-        #qc = self.__fix_parameters(qc)
         filename = 'uncompiled_' + self.output_file_name
         qc.qasm(filename = filename)
         self.__fix_param_names(filename)
@@ -92,41 +91,7 @@ class CompileQAOAQiskit:
         trans_ckt.qasm(filename = filename)
         self.__fix_param_names(filename)
         return [qc, trans_ckt]
-    
-    def __fix_parameters(self, circ):
-        n = circ.num_qubits
-        new_ckt = QuantumCircuit(n, n)
-        dag = circuit_to_dag(circ)
-        for node in dag.topological_op_nodes():
-            if node._op.is_parameterized():
-                param = node._op.params[0].name
-                captures = re.search('(g\d+)_(\d+)_(\d+)', param).groups()
-                if captures:
-                    g = captures[0]
-                    n1 = captures[1]
-                    n2 = captures[2]
-                    gamma = Parameter(g)
-                    if '({}, {})'.format(n1, n2) in self.zz_dict.keys():
-                        coeff = float(self.zz_dict['({}, {})'.format(n1, n2)])
-                    else:
-                        coeff = float(self.zz_dict['({}, {})'.format(n2, n1)])
-                    new_op = node.op.copy()
-                    new_op.params = [2*coeff*gamma]
-                    try:
-                        new_ckt.append(new_op, qargs = node.qargs)
-                    except:
-                        import pdb
-                        pdb.set_trace()
-                else:
-                    beta = Parameter(param)
-                    new_op = node.op.copy()
-                    new_op.params = beta
-                    new_ckt.append(new_op, qargs = node.qargs)
-            else:
-                new_ckt.append(node.op, qargs = node.qargs)
-        return new_ckt
-                
-                
+
     def __load_config(self, config_json = None):
         """
         This method loads the variables in the config json file.
