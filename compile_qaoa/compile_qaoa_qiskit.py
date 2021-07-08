@@ -560,9 +560,7 @@ class CompileQAOAQiskit:
             print('The circuit is written with beta/gamma parameters' +
             'at different p-lavels (https://arxiv.org/pdf/1411.4028.pdf)')
             print('bX --> beta parameter at p=X')
-            print('gX_Y_Z --> gamma parameter at p=X between *logical* ' +
-            'qubit Y and Z. For the MaxCut problem of unweighted graphs, ' +
-            'gX_Y1_Z1 = gX_Y2_Z2 (https://arxiv.org/pdf/1411.4028.pdf)')
+            print('gX --> gamma parameter at p=X (https://arxiv.org/pdf/1411.4028.pdf)')
         else:
             print('Compilation Error! Please check the input files.')
 
