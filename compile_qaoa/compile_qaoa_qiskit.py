@@ -557,7 +557,7 @@ class CompileQAOAQiskit:
             print('({}) Depth: {}, gate-count(2Q): {}, ESP: {}'.format(pol, ckt.depth(),
             ckt.count_ops()[self.native_2q[0]], math.exp(-self.cost)))
 
-            print('The circuit is written with beta/gamma parameters' +
+            print('The circuit is written with beta/gamma parameters ' +
             'at different p-lavels (https://arxiv.org/pdf/1411.4028.pdf)')
             print('bX --> beta parameter at p=X')
             print('gX --> gamma parameter at p=X (https://arxiv.org/pdf/1411.4028.pdf)')

@@ -59,7 +59,7 @@ QASM File Written: VIC_QAOA.qasm
 ##################### Notes on the Output File #############################
 (naive) Depth: 128, gate-count(2Q): 227, ESP: 0.0019301743858659978
 (VIC) Depth: 69, gate-count(2Q): 151, ESP: 0.015510689327353987
-The circuit is written with beta/gamma parametersat different p-lavels (https://arxiv.org/pdf/1411.4028.pdf)
+The circuit is written with beta/gamma parameters at different p-lavels (https://arxiv.org/pdf/1411.4028.pdf)
 bX --> beta parameter at p=X
 gX --> gamma parameter at p=X (https://arxiv.org/pdf/1411.4028.pdf)
 ############################################################################
@@ -68,7 +68,7 @@ gX --> gamma parameter at p=X (https://arxiv.org/pdf/1411.4028.pdf)
 ### Notes on the Output File
 * The circuit is written with beta/gamma parameters at different p-lavels (https://arxiv.org/pdf/1411.4028.pdf)
 * bX --> beta parameter at p=X
-* gX_Y_Z --> gamma parameter at p=X between *logical* qubit Y and Z. For the MaxCut problem of unweighted graphs, gX_Y1_Z1 = gX_Y2_Z2 (https://arxiv.org/pdf/1411.4028.pdf)
+* gX --> gamma parameter at p=X (https://arxiv.org/pdf/1411.4028.pdf)
 * A sample file can be found [here](https://github.com/mahabubul-alam/QAOA_Compiler/blob/main/examples/uncompiled_QAOA.qasm)
 
 
