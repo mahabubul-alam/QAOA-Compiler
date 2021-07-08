@@ -20,6 +20,8 @@ from qiskit import QuantumCircuit, transpile, Aer, execute
 import commentjson as json
 import networkx as nx
 from qiskit.quantum_info.analysis import hellinger_fidelity
+from qiskit.converters import circuit_to_dag
+
 
 class CompileQAOAQiskit:
     """
@@ -49,6 +51,8 @@ class CompileQAOAQiskit:
         self.__extract_qc_data(qc_json)
         self.layer_zz_assignments = {}
         self.zz_graph = self.qaoa_zz_graph(circuit_json)
+        with open(circuit_json) as f:
+            self.zz_dict = json.loads(f.read())
         self.initial_layout = list(range(len(self.zz_graph.nodes())))
         self.circuit = None
         self.sorted_ops = None
@@ -80,10 +84,49 @@ class CompileQAOAQiskit:
         qc.measure(range(n), range(n))
 
         trans_ckt = self.__compile_with_backend(ckt_qiskit = qc)
-        qc.qasm(filename='uncompiled_'+self.output_file_name)
-        trans_ckt.qasm(filename='naive_compiled_' + self.output_file_name)
+        #qc = self.__fix_parameters(qc)
+        filename = 'uncompiled_' + self.output_file_name
+        qc.qasm(filename = filename)
+        self.__fix_param_names(filename)
+        filename = 'naive_compiled_' + self.output_file_name
+        trans_ckt.qasm(filename = filename)
+        self.__fix_param_names(filename)
         return [qc, trans_ckt]
-
+    
+    def __fix_parameters(self, circ):
+        n = circ.num_qubits
+        new_ckt = QuantumCircuit(n, n)
+        dag = circuit_to_dag(circ)
+        for node in dag.topological_op_nodes():
+            if node._op.is_parameterized():
+                param = node._op.params[0].name
+                captures = re.search('(g\d+)_(\d+)_(\d+)', param).groups()
+                if captures:
+                    g = captures[0]
+                    n1 = captures[1]
+                    n2 = captures[2]
+                    gamma = Parameter(g)
+                    if '({}, {})'.format(n1, n2) in self.zz_dict.keys():
+                        coeff = float(self.zz_dict['({}, {})'.format(n1, n2)])
+                    else:
+                        coeff = float(self.zz_dict['({}, {})'.format(n2, n1)])
+                    new_op = node.op.copy()
+                    new_op.params = [2*coeff*gamma]
+                    try:
+                        new_ckt.append(new_op, qargs = node.qargs)
+                    except:
+                        import pdb
+                        pdb.set_trace()
+                else:
+                    beta = Parameter(param)
+                    new_op = node.op.copy()
+                    new_op.params = beta
+                    new_ckt.append(new_op, qargs = node.qargs)
+            else:
+                new_ckt.append(node.op, qargs = node.qargs)
+        return new_ckt
+                
+                
     def __load_config(self, config_json = None):
         """
         This method loads the variables in the config json file.
@@ -178,7 +221,7 @@ class CompileQAOAQiskit:
             data = json.loads(f.read())
         zz_graph = nx.Graph()
         for key, val in data.items():
-            nodes = eval(val)
+            nodes = eval(key)
             zz_graph.add_edge(nodes[0], nodes[1])
         return zz_graph
 
@@ -572,11 +615,13 @@ class CompileQAOAQiskit:
         layer_order = self.layer_zz_assignments.keys()
         self.__construct_circuit_iterc(layer_order)
         ckt = self.circuit
-        ckt.qasm(filename='IP_'+self.output_file_name)
+        filename = 'IP_' + self.output_file_name
+        ckt.qasm(filename = filename)
+        self.__fix_param_names(filename)
 
         print('############################################################################')
         print('Instruction Parallelization-only Compilation (IP) completed (initial layout: {})!'.format(initial_layout_method) +
-        '\nQASM File Written: {}'.format('IP_'+self.output_file_name))
+        '\nQASM File Written: {}'.format('IP_' + self.output_file_name))
         self.__qasm_note(ckt, 'IP')
 
     def run_iter_c(self, target = 'D', initial_layout_method = 'qaim'):
@@ -592,12 +637,13 @@ class CompileQAOAQiskit:
         self.__instruction_parallelization()
         self.__iterative_compilation()
         ckt = self.circuit
-        ckt.qasm(filename='IterC_'+self.output_file_name)
-
+        filename = 'IterC_' + self.output_file_name
+        ckt.qasm(filename = filename)
+        self.__fix_param_names(filename)
         print('############################################################################')
         print('Iterative Compilation (IterC) completed (initial layout: {})!'.format(initial_layout_method) +
-        '\nQASM File Written: {}'.format('IterC_'+self.output_file_name))
-        self.__qasm_note(ckt, 'IterC_'+target)
+        '\nQASM File Written: {}'.format('IterC_' + self.output_file_name))
+        self.__qasm_note(ckt, 'IterC_' + target)
 
     def run_incr_c(self, variation_aware = False, initial_layout_method = 'qaim'):
         """
@@ -613,12 +659,40 @@ class CompileQAOAQiskit:
 
         print('############################################################################')
         if variation_aware:
-            ckt.qasm(filename='VIC_'+self.output_file_name)
+            filename = 'VIC_' + self.output_file_name
+            ckt.qasm(filename = filename)
+            self.__fix_param_names(filename)
             print('Variation-aware Incremental Compilation (VIC) completed (initial layout: {})!'.format(initial_layout_method) +
-            '\nQASM File Written: {}'.format('VIC_'+self.output_file_name))
+            '\nQASM File Written: {}'.format('VIC_' + self.output_file_name))
             self.__qasm_note(ckt, 'VIC')
         else:
-            ckt.qasm(filename='IC_'+self.output_file_name)
+            filename = 'IC_' + self.output_file_name
+            ckt.qasm(filename = filename)
+            self.__fix_param_names(filename)
             print('Incremental Compilation (IC) completed (initial layout: {})!'.format(initial_layout_method) +
-            '\nQASM File Written: {}'.format('IC_'+self.output_file_name))
+            '\nQASM File Written: {}'.format('IC_' + self.output_file_name))
             self.__qasm_note(ckt, 'IC')
+
+    def __fix_param_names(self, filename):
+        all_keys = self.zz_dict.keys()
+        f = open(filename, 'r').readlines()
+        out = open('{}_fixed'.format(filename), 'w')
+        for line in f:
+            captures = re.search('(g\d+)_(\d+)_(\d+)', line)
+            if captures:
+                captures = captures.groups()
+                g = captures[0]
+                n1 = captures[1]
+                n2 = captures[2]
+                if '({}, {})'.format(n1, n2) in all_keys:
+                    coeff = 2*float(self.zz_dict['({}, {})'.format(n1, n2)])
+                else:
+                    coeff = 2*float(self.zz_dict['({}, {})'.format(n2, n1)])
+                line = line.replace('{}_{}_{}'.format(g, n1, n2), str(coeff) + '*' + g)
+            out.write(line)
+        out.close()
+        os.remove(filename)
+        os.rename(filename + '_fixed', filename)
+
+
+
