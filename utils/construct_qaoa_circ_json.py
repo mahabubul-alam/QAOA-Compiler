@@ -14,7 +14,7 @@ g = nx.erdos_renyi_graph(N,P,seed=SEED) #networkx graph object
 #creating a dictionary from the graph object.
 dic = {}
 for i, edge in enumerate(g.edges()):
-    dic['{}'.format(edge)] = "{}".format(0.5)
+    dic['{}'.format(edge)] = "{}".format(-0.5)
 #saving the graph as a json file
 with open('QAOA_circ.json','w') as fp:
     json.dump(dic,fp,indent=4)
