@@ -71,8 +71,8 @@ gX --> gamma parameter at p=X (https://arxiv.org/pdf/1411.4028.pdf)
 * gX --> gamma parameter at p=X (https://arxiv.org/pdf/1411.4028.pdf)
 * A sample file can be found [here](https://github.com/mahabubul-alam/QAOA_Compiler/blob/main/examples/uncompiled_QAOA.qasm)
 
-
-
+### Docker Image
+A docker image can be downloaded from: https://hub.docker.com/repository/docker/mahabubul92/qaoa-compiler
 
 ## Citation
 ```
