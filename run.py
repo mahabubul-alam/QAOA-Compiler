@@ -3,7 +3,11 @@ CLI to use the QAOA compiler.
 """
 import argparse
 import os
+import glob
 from compile_qaoa import compile_qaoa_qiskit as cqq
+
+for f in glob.glob('*.qasm'):
+    os.remove(f)
 
 parser = argparse.ArgumentParser(allow_abbrev=True)
 parser.add_argument("-device_json", help="Target Device configuration File",
