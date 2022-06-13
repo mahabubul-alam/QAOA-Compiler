@@ -73,21 +73,21 @@ class CompileQAOAQiskit:
             for zz in self.zz_graph.edges():
                 n1 = zz[0]
                 n2 = zz[1]
-                gamma = Parameter('g{}_{}_{}'.format(p, n1, n2))
+                gamma = Parameter(f'g{p}_{n1}_{n2}')
                 qc.cx(n1, n2)
                 qc.rz(gamma, n2)
                 qc.cx(n1, n2)
-            beta = Parameter('b{}'.format(p))
+            beta = Parameter(f'b{p}')
             for node in self.zz_graph.nodes():
                 qc.rx(beta,node)
             qc.barrier()
         qc.measure(range(n), range(n))
 
         trans_ckt = self.__compile_with_backend(ckt_qiskit = qc)
-        filename = 'uncompiled_' + self.output_file_name
+        filename = f'uncompiled_{self.output_file_name}'
         qc.qasm(filename = filename)
         self.__fix_param_names(filename)
-        filename = 'naive_compiled_' + self.output_file_name
+        filename = f'naive_compiled_{self.output_file_name}'
         trans_ckt.qasm(filename = filename)
         self.__fix_param_names(filename)
         return [qc, trans_ckt]
@@ -121,10 +121,10 @@ class CompileQAOAQiskit:
             self.Opt_Level = 1
         if 'Backend' in self.config.keys():
             self.Backend = str(self.config['Backend'])
-            assert self.Backend in self.supported_backends
         else:
             self.Backend = 'qiskit'
-            assert self.Backend in self.supported_backends
+
+        assert self.Backend in self.supported_backends
 
     def __extract_qc_data(self, qc_file = None):
         """
@@ -207,11 +207,15 @@ class CompileQAOAQiskit:
             physical_q = re.sub('\[|\]','',physical_q)
             logical_q = re.search('\[.*\]',logical_qs).group()
             logical_q = re.sub('\[|\]','',logical_q)
-            fmap[logical_q[0:]] = int(physical_q[0:])
+            fmap[logical_q[:]] = int(physical_q[:])
 
-        final_map = []
-        for i in range(qiskit_ckt_object.width() - qiskit_ckt_object.num_qubits):
-            final_map.append(fmap[str(i)])
+        final_map = [
+            fmap[str(i)]
+            for i in range(
+                qiskit_ckt_object.width() - qiskit_ckt_object.num_qubits
+            )
+        ]
+
         os.system('rm temp')
         os.system('rm tempfile')
         self.final_map = final_map
@@ -243,10 +247,12 @@ class CompileQAOAQiskit:
         for op in unsorted_ops:
             _physical_q1 = self.initial_layout[op[0]]
             _physical_q2 = self.initial_layout[op[1]]
-            if not self.incr_c_var_awareness:
-                swap_dist = self.qq_distances[_physical_q1][_physical_q2]
-            else:
-                swap_dist = self.noise_aware_qq_distances[_physical_q1][_physical_q2]
+            swap_dist = (
+                self.noise_aware_qq_distances[_physical_q1][_physical_q2]
+                if self.incr_c_var_awareness
+                else self.qq_distances[_physical_q1][_physical_q2]
+            )
+
             swap_distances_ops[op] = swap_dist
 
         for op in unsorted_ops:
@@ -272,7 +278,7 @@ class CompileQAOAQiskit:
         for zz in self.layer_zz_assignments['L0']:
             n1 = zz[0]
             n2 = zz[1]
-            gamma = Parameter('g{}_{}_{}'.format(p, n1, n2))
+            gamma = Parameter(f'g{p}_{n1}_{n2}')
             qc.cx(n1, n2)
             qc.rz(gamma, n2)
             qc.cx(n1, n2)
@@ -338,7 +344,7 @@ class CompileQAOAQiskit:
                 new_ckt_segment.remove_final_measurements(inplace=True)
                 incr_c_qc = incr_c_qc + new_ckt_segment
 
-            beta = Parameter('b{}'.format(p))
+            beta = Parameter(f'b{p}')
             for node in range(logical_n):
                 incr_c_qc.rx(beta,self.initial_layout[node])
             incr_c_qc.barrier()
@@ -361,10 +367,10 @@ class CompileQAOAQiskit:
         layer_occupancy = {current_layer: list()}
         for qubit in logical_qubits:
             layer_occupancy[current_layer].insert(len(layer_occupancy[current_layer]), [qubit,'FREE'])
-        self.layer_zz_assignments[current_layer] = list()
+        self.layer_zz_assignments[current_layer] = []
 
         while True:
-            unallocated_edges = list()
+            unallocated_edges = []
             allocated_op_count_in_this_layer = 0
             for edge in remaining_edges:
                 if allocated_op_count_in_this_layer >= self.Packing_Limit:
@@ -393,15 +399,15 @@ class CompileQAOAQiskit:
             remaining_edges = unallocated_edges
             if single_layer:
                 #print('Single layer formed!')
-                self.layer_zz_assignments['R'] = list()
+                self.layer_zz_assignments['R'] = []
                 for edge in remaining_edges:
                     self.layer_zz_assignments['R'].insert(0, edge)
                 break
             elif len(remaining_edges) != 0:
                 next_layer = int(current_layer[1:]) + 1
-                current_layer = 'L' + str(next_layer)
-                layer_occupancy[current_layer] = list()
-                self.layer_zz_assignments[current_layer] = list()
+                current_layer = f'L{str(next_layer)}'
+                layer_occupancy[current_layer] = []
+                self.layer_zz_assignments[current_layer] = []
                 for qubit in logical_qubits:
                     layer_occupancy[current_layer].insert(len(layer_occupancy[current_layer]), [qubit,'FREE'])
             else:
@@ -413,10 +419,7 @@ class CompileQAOAQiskit:
         This method is used for iterative compilation.
         """
         interchange = []
-        layer_order = []
-        for l in self.layer_zz_assignments.keys():
-            layer_order.append(l)
-
+        layer_order = list(self.layer_zz_assignments.keys())
         opt_target = 10e10
         opt_ckt = QuantumCircuit()
         while True:
@@ -463,27 +466,26 @@ class CompileQAOAQiskit:
         """
         cir = self.circuit.copy()
         ESP = 1
-        while True:
-            if cir._data:
-                k = cir._data.pop()
-                gate = k[0].__dict__['name']
-                if gate not in self.basis_gates:
-                    continue
-                qub = []
-                for i in range(len(k[1])):
-                    qub.append(k[1][i].index)
-                if len(qub) == 1:
-                    ESP = ESP*float(self.qc_data[gate][str(qub[0])])
-                else:
-                    if '({},{})'.format(qub[0],qub[1]) in self.qc_data[gate].keys():
-                        ESP = ESP*float(self.qc_data[gate]['({},{})'.format(qub[0], qub[1])])
-                    elif '({},{})'.format(qub[1],qub[0]) in self.qc_data[gate].keys():
-                        ESP = ESP*float(self.qc_data[gate]['({},{})'.format(qub[1], qub[0])])
-                    else:
-                        print('Please check the device configuration' +
-                        'file for the following qubit-pair data: {}, {}'.format(qub[0], qub[1]))
+        while cir._data:
+            k = cir._data.pop()
+            gate = k[0].__dict__['name']
+            if gate not in self.basis_gates:
+                continue
+            qub = [k[1][i].index for i in range(len(k[1]))]
+            if len(qub) == 1:
+                ESP = ESP*float(self.qc_data[gate][str(qub[0])])
+            elif f'({qub[0]},{qub[1]})' in self.qc_data[gate].keys():
+                ESP = ESP * float(self.qc_data[gate][f'({qub[0]},{qub[1]})'])
+            elif f'({qub[1]},{qub[0]})' in self.qc_data[gate].keys():
+                ESP = ESP * float(self.qc_data[gate][f'({qub[1]},{qub[0]})'])
             else:
-                break
+                print(
+                    (
+                        'Please check the device configuration'
+                        + f'file for the following qubit-pair data: {qub[0]}, {qub[1]}'
+                    )
+                )
+
         self.cost = -math.log(ESP)
 
     def __construct_circuit_iterc(self, layer_order = None):
@@ -502,12 +504,12 @@ class CompileQAOAQiskit:
                 for edge in self.layer_zz_assignments[l]:
                     n1 = edge[0]
                     n2 = edge[1]
-                    gamma = Parameter('g{}_{}_{}'.format(p, n1, n2))
+                    gamma = Parameter(f'g{p}_{n1}_{n2}')
                     qc.cx(n1, n2)
                     qc.rz(gamma, n2)
                     qc.cx(n1, n2)
             # mixing depends on the number of nodes rx gates
-            beta = Parameter('b{}'.format(p))
+            beta = Parameter(f'b{p}')
             for node in self.zz_graph.nodes():
                 qc.rx(beta, node)
             qc.barrier()
@@ -521,14 +523,9 @@ class CompileQAOAQiskit:
         This method checks (approximate) equivalence of the compiled circuit with the original one
         by comparing the output measurements (at a fixed value of all the parameters).
         """
-        bind_dic1 = {}
-        bind_dic2 = {}
         val = 1
-        for param in ckt.parameters:
-            bind_dic1[param] = val
-        for param in self.uncompiled_ckt.parameters:
-            bind_dic2[param] = val
-
+        bind_dic1 = {param: val for param in ckt.parameters}
+        bind_dic2 = {param: val for param in self.uncompiled_ckt.parameters}
         ckt1 = ckt.bind_parameters(bind_dic1)
         ckt2 = self.uncompiled_ckt.bind_parameters(bind_dic2)
         backend_sim = Aer.get_backend('qasm_simulator')
@@ -549,13 +546,17 @@ class CompileQAOAQiskit:
         if ckt:
             self.circuit = self.naive_ckt
             self.__estimate_sp()
-            print('(naive) Depth: {}, gate-count(2Q): {}, ESP: {}'.format(self.naive_ckt.depth(),
-            self.naive_ckt.count_ops()[self.native_2q[0]], math.exp(-self.cost)))
+            print(
+                f'(naive) Depth: {self.naive_ckt.depth()}, gate-count(2Q): {self.naive_ckt.count_ops()[self.native_2q[0]]}, ESP: {math.exp(-self.cost)}'
+            )
+
 
             self.circuit = ckt
             self.__estimate_sp()
-            print('({}) Depth: {}, gate-count(2Q): {}, ESP: {}'.format(pol, ckt.depth(),
-            ckt.count_ops()[self.native_2q[0]], math.exp(-self.cost)))
+            print(
+                f'({pol}) Depth: {ckt.depth()}, gate-count(2Q): {ckt.count_ops()[self.native_2q[0]]}, ESP: {math.exp(-self.cost)}'
+            )
+
 
             print('The circuit is written with beta/gamma parameters ' +
             'at different p-lavels (https://arxiv.org/pdf/1411.4028.pdf)')
@@ -578,13 +579,18 @@ class CompileQAOAQiskit:
         layer_order = self.layer_zz_assignments.keys()
         self.__construct_circuit_iterc(layer_order)
         ckt = self.circuit
-        filename = 'IP_' + self.output_file_name
+        filename = f'IP_{self.output_file_name}'
         ckt.qasm(filename = filename)
         self.__fix_param_names(filename)
 
         print('############################################################################')
-        print('Instruction Parallelization-only Compilation (IP) completed (initial layout: {})!'.format(initial_layout_method) +
-        '\nQASM File Written: {}'.format('IP_' + self.output_file_name))
+        print(
+            (
+                f'Instruction Parallelization-only Compilation (IP) completed (initial layout: {initial_layout_method})!'
+                + '\nQASM File Written: {}'.format(f'IP_{self.output_file_name}')
+            )
+        )
+
         self.__qasm_note(ckt, 'IP')
 
     def run_iter_c(self, target = 'D', initial_layout_method = 'qaim'):
@@ -600,13 +606,20 @@ class CompileQAOAQiskit:
         self.__instruction_parallelization()
         self.__iterative_compilation()
         ckt = self.circuit
-        filename = 'IterC_' + self.output_file_name
+        filename = f'IterC_{self.output_file_name}'
         ckt.qasm(filename = filename)
         self.__fix_param_names(filename)
         print('############################################################################')
-        print('Iterative Compilation (IterC) completed (initial layout: {})!'.format(initial_layout_method) +
-        '\nQASM File Written: {}'.format('IterC_' + self.output_file_name))
-        self.__qasm_note(ckt, 'IterC_' + target)
+        print(
+            (
+                f'Iterative Compilation (IterC) completed (initial layout: {initial_layout_method})!'
+                + '\nQASM File Written: {}'.format(
+                    f'IterC_{self.output_file_name}'
+                )
+            )
+        )
+
+        self.__qasm_note(ckt, f'IterC_{target}')
 
     def run_incr_c(self, variation_aware = False, initial_layout_method = 'qaim'):
         """
@@ -622,40 +635,52 @@ class CompileQAOAQiskit:
 
         print('############################################################################')
         if variation_aware:
-            filename = 'VIC_' + self.output_file_name
+            filename = f'VIC_{self.output_file_name}'
             ckt.qasm(filename = filename)
             self.__fix_param_names(filename)
-            print('Variation-aware Incremental Compilation (VIC) completed (initial layout: {})!'.format(initial_layout_method) +
-            '\nQASM File Written: {}'.format('VIC_' + self.output_file_name))
+            print(
+                (
+                    f'Variation-aware Incremental Compilation (VIC) completed (initial layout: {initial_layout_method})!'
+                    + '\nQASM File Written: {}'.format(
+                        f'VIC_{self.output_file_name}'
+                    )
+                )
+            )
+
             self.__qasm_note(ckt, 'VIC')
         else:
-            filename = 'IC_' + self.output_file_name
+            filename = f'IC_{self.output_file_name}'
             ckt.qasm(filename = filename)
             self.__fix_param_names(filename)
-            print('Incremental Compilation (IC) completed (initial layout: {})!'.format(initial_layout_method) +
-            '\nQASM File Written: {}'.format('IC_' + self.output_file_name))
+            print(
+                (
+                    f'Incremental Compilation (IC) completed (initial layout: {initial_layout_method})!'
+                    + '\nQASM File Written: {}'.format(
+                        f'IC_{self.output_file_name}'
+                    )
+                )
+            )
+
             self.__qasm_note(ckt, 'IC')
 
     def __fix_param_names(self, filename):
         all_keys = self.zz_dict.keys()
         f = open(filename, 'r').readlines()
-        out = open('{}_fixed'.format(filename), 'w')
-        for line in f:
-            captures = re.search('(g\d+)_(\d+)_(\d+)', line)
-            if captures:
-                captures = captures.groups()
-                g = captures[0]
-                n1 = captures[1]
-                n2 = captures[2]
-                if '({}, {})'.format(n1, n2) in all_keys:
-                    coeff = 2*float(self.zz_dict['({}, {})'.format(n1, n2)])
-                else:
-                    coeff = 2*float(self.zz_dict['({}, {})'.format(n2, n1)])
-                line = line.replace('{}_{}_{}'.format(g, n1, n2), str(coeff) + '*' + g)
-            out.write(line)
-        out.close()
+        with open(f'{filename}_fixed', 'w') as out:
+            for line in f:
+                if captures := re.search('(g\d+)_(\d+)_(\d+)', line):
+                    captures = captures.groups()
+                    g = captures[0]
+                    n1 = captures[1]
+                    n2 = captures[2]
+                    if f'({n1}, {n2})' in all_keys:
+                        coeff = 2 * float(self.zz_dict[f'({n1}, {n2})'])
+                    else:
+                        coeff = 2 * float(self.zz_dict[f'({n2}, {n1})'])
+                    line = line.replace(f'{g}_{n1}_{n2}', f'{str(coeff)}*{g}')
+                out.write(line)
         os.remove(filename)
-        os.rename(filename + '_fixed', filename)
+        os.rename(f'{filename}_fixed', filename)
 
 
 
