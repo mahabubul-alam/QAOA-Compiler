@@ -32,9 +32,9 @@ def initial_layout(coupling_graph, problem_zz_interactions_graph, method = 'qaim
     if FW is None:
         FW = nx.floyd_warshall(coupling_graph)
     #initial empty layout assignment
-    logical_to_physical_layout = {}
-    for node in problem_zz_interactions_graph.nodes():
-        logical_to_physical_layout[node] = 'NA'
+    logical_to_physical_layout = {
+        node: 'NA' for node in problem_zz_interactions_graph.nodes()
+    }
 
     #sort program qubits based on usage
     sorted_program_qubits = sort_program_qubits(problem_zz_interactions_graph)
@@ -49,33 +49,25 @@ def initial_layout(coupling_graph, problem_zz_interactions_graph, method = 'qaim
     allocated_physical_qubits = []
 
     for program_qubit in sorted_program_qubits:
-        #check which neighbors are already placced
-        placed_neighbors = []
-        for neigh in problem_zz_interactions_graph.neighbors(program_qubit):
-            if logical_to_physical_layout[neigh] != 'NA':
-                placed_neighbors.append(neigh)
-
-        #assign best available physical qubit to logical
-        #qubit if none of the logical neighbors are placed
-        if placed_neighbors == []:
-            for physical_qubit in sorted_physical_qubits:
-                if physical_qubit not in allocated_physical_qubits:
-                    logical_to_physical_layout[program_qubit] = physical_qubit
-                    allocated_physical_qubits.append(physical_qubit)
-                    break
-        #if some logical neighbors are already placed find unallocated physical neighbors
-        else:
+        if placed_neighbors := [
+            neigh
+            for neigh in problem_zz_interactions_graph.neighbors(program_qubit)
+            if logical_to_physical_layout[neigh] != 'NA'
+        ]:
             unallocated_physical_neighbors = []
             for qubit in placed_neighbors:
                 allocated_physical = logical_to_physical_layout[qubit]
-                for element in coupling_graph.neighbors(allocated_physical):
-                    if element not in allocated_physical_qubits:
-                        unallocated_physical_neighbors.append(element)
+                unallocated_physical_neighbors.extend(
+                    element
+                    for element in coupling_graph.neighbors(allocated_physical)
+                    if element not in allocated_physical_qubits
+                )
+
             #uniqify the unallocated physical neighbors
             unallocated_physical_neighbors = list(set(unallocated_physical_neighbors))
 
             #if none unallocated physical neighbors exists, pick the best available one
-            if unallocated_physical_neighbors == []:
+            if not unallocated_physical_neighbors:
                 for physical_qubit in sorted_physical_qubits:
                     if physical_qubit not in allocated_physical_qubits:
                         logical_to_physical_layout[program_qubit] = physical_qubit
@@ -96,7 +88,7 @@ def initial_layout(coupling_graph, problem_zz_interactions_graph, method = 'qaim
             #sorting procedure
             sorted_unallocated_physical_neighbors = []
             for element in unallocated_physical_neighbors:
-                if sorted_unallocated_physical_neighbors == []:
+                if not sorted_unallocated_physical_neighbors:
                     sorted_unallocated_physical_neighbors.append(element)
                     continue
                 i = 0
@@ -115,6 +107,12 @@ def initial_layout(coupling_graph, problem_zz_interactions_graph, method = 'qaim
             logical_to_physical_layout[program_qubit] = sorted_unallocated_physical_neighbors[0]
             allocated_physical_qubits.append(sorted_unallocated_physical_neighbors[0])
 
+        else:
+            for physical_qubit in sorted_physical_qubits:
+                if physical_qubit not in allocated_physical_qubits:
+                    logical_to_physical_layout[program_qubit] = physical_qubit
+                    allocated_physical_qubits.append(physical_qubit)
+                    break
     return logical_to_physical_layout
 
 def sort_program_qubits(problem_zz_interactions_graph):
@@ -125,7 +123,7 @@ def sort_program_qubits(problem_zz_interactions_graph):
     problem_profile = problem_profiling(problem_zz_interactions_graph)
     sorted_program_qubits = []
     for key in problem_profile:
-        if sorted_program_qubits == []:
+        if not sorted_program_qubits:
             sorted_program_qubits.append(key)
             #print(sorted_program_qubits)
             continue
@@ -139,7 +137,7 @@ def sort_program_qubits(problem_zz_interactions_graph):
             i = i + 1
         if assigned == 'NO':
             sorted_program_qubits.append(key)
-        #print(sorted_program_qubits)
+            #print(sorted_program_qubits)
     return sorted_program_qubits
 
 def problem_profiling(problem_zz_interactions_graph):
@@ -156,7 +154,7 @@ def problem_profiling(problem_zz_interactions_graph):
             pp_dict[node] = sum(1 for _ in problem_zz_interactions_graph.neighbors(node))
         except TypeError:
             pp_dict[node] = 0
-            print('Unconnected node: {}'.format(node))
+            print(f'Unconnected node: {node}')
     return pp_dict
 
 def hardware_qubit_strength_vqp(coupling_graph):
@@ -172,9 +170,7 @@ def hardware_qubit_strength_vqp(coupling_graph):
     con_strengths = {}
     for node in coupling_graph.nodes():
         neighbours = coupling_graph.neighbors(node)
-        strength = 0
-        for neigh in neighbours:
-            strength += coupling_graph[node][neigh]['weight']
+        strength = sum(coupling_graph[node][neigh]['weight'] for neigh in neighbours)
         con_strengths[node] = strength
     return con_strengths
 
@@ -193,8 +189,8 @@ def hardware_qubit_strength_qaim(coupling_graph):
     for node in coupling_graph.nodes():
         con_strengths[node] = 0
         for node2 in coupling_graph.nodes():
-            if distances[node][node2] == 1 or distances[node][node2] == 2:
-                con_strengths[node] = con_strengths[node] + 1
+            if distances[node][node2] in [1, 2]:
+                con_strengths[node] += 1
     return con_strengths
 
 def sort_physical_qubits(physical_qubit_profile):
@@ -209,7 +205,7 @@ def sort_physical_qubits(physical_qubit_profile):
     """
     sorted_physical_qubits = []
     for key in physical_qubit_profile.keys():
-        if sorted_physical_qubits == []:
+        if not sorted_physical_qubits:
             sorted_physical_qubits.append(key)
             #print(sorted_physical_qubits)
             continue
@@ -223,7 +219,7 @@ def sort_physical_qubits(physical_qubit_profile):
             i = i + 1
         if assigned == 'NO':
             sorted_physical_qubits.append(key)
-        #print(sorted_physical_qubits)
+            #print(sorted_physical_qubits)
     return sorted_physical_qubits
 
 if __name__ == '__main__':
